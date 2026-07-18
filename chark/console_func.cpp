@@ -28,6 +28,16 @@ void Screen_Controller::switch_to_big()
 	top_y = 51;
 }
 
+c16 Screen_Controller::get_foreground_basic_color() const
+{
+	return foreground_basic;
+}
+
+c16 Screen_Controller::get_background_basic_color() const
+{
+	return background_basic;
+}
+
 void check_position(int x, int y)
 {
 	if (x < sc_->bottom_x || sc_->top_x < x)
@@ -41,6 +51,16 @@ void check_position(int x, int y)
 }
 
 Screen_Controller* sc_;
+
+c16 get_foreground_bassic_color()
+{
+	sc_->get_foreground_basic_color();
+}
+
+c16 get_background_bassic_color()
+{
+	sc_->get_background_basic_color();
+}
 
 
 void start_for_all_OS()

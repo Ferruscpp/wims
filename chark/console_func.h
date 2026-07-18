@@ -14,6 +14,10 @@ using namespace std;
 #define __linux__ 1
 #endif
 
+struct crgb;
+struct c8bit;
+struct c16;
+
 class Screen_Controller
 {
 private:
@@ -21,6 +25,8 @@ private:
 	int top_x = 201;
 	int bottom_y = 0;
 	int top_y = 51;
+	c16 foreground_basic = 15;
+	c16 background_basic = 0;
 public:
 	Screen_Controller();
 
@@ -28,10 +34,18 @@ public:
 
 	void switch_to_big();
 
+	c16 get_foreground_basic_color() const;
+
+	c16 get_background_basic_color() const;
+
 	friend void check_position(int x, int y);
 };
 
 void check_position(int x, int y);
+
+c16 get_foreground_bassic_color();
+
+c16 get_background_bassic_color();
 
 extern Screen_Controller* sc_;
 
