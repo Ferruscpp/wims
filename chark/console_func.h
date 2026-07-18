@@ -4,185 +4,184 @@
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include <chrono>
 
 using namespace std;
+
+#define DEBUG_MODE_FOR_LINUX 0
+#if DEBUG_MODE_FOR_LINUX
+#define _WIN32 0
+#define __linux__ 1
+#endif
+
+class Screen_Controller
+{
+private:
+	int bottom_x = 0;
+	int top_x = 201;
+	int bottom_y = 0;
+	int top_y = 51;
+public:
+	Screen_Controller();
+
+	void switch_to_small();
+
+	void switch_to_big();
+
+	friend void check_position(int x, int y);
+};
+
+void check_position(int x, int y);
+
+extern Screen_Controller* sc_;
+
+void start_for_all_OS();
+void end_for_all_OS();
 
 #if _WIN32
 #include <windows.h>
 #include <conio.h>
-int put(string& str)
-{
-	for (int i = 0; i < str.size(); i++)
-	{
-		if (!_putch(str[i]))
-		{
-			return EOF;
-		}
-	}
-	return str[str.size() - 1];
-}
-int get()
-{
-	return _getch();
-}
-class TerminalController
+//-----------------------------------------------------
+class Terminal_Controller
 {
 public:
-	TerminalController()
-	{
-		
-	}
-	~TerminalController()
-	{
-
-	}
+	Terminal_Controller();
+	~Terminal_Controller();
 };
-
-void init_console_func()
-{
-
-}
-
-void end_of_work_console_func()
-{
-
-}
+//-----------------------------------------------------
+int putstr_(string str);
+//-----------------------------------------------------
+int getch_();
+//-----------------------------------------------------
+bool is_hit_();
+//-----------------------------------------------------
+void wait(int milliseconds);
+//-----------------------------------------------------
+void clear_in_buffer();
+//-----------------------------------------------------
+void init_console_func();
+//-----------------------------------------------------
+void end_of_work_console_func();
 #elif __linux__
 #include <unistd.h>
 #include <termios.h>
-//------------------------------------------------------
-class TerminalController
+#include <sys/ioctl.h>
+//-----------------------------------------------------
+class Terminal_Controller
 {
 private:
-	inline static int counter = 0;
+	static int counter;
 	termios newin, oldin;
 public:
-	TerminalController()
-	{
-		counter++;
-		tcgetattr(STDIN_FILENO, &oldin);
-		newin = oldin;
-		newin.c_lflag &= ~(ICANON | ECHO);
-		tcsetattr(STDIN_FILENO, TCSAFLUSH, &newin);
-	}
-	static int get_info()
-	{
-		return counter;
-	}
-	~TerminalController()
-	{
-		tcsetattr(STDIN_FILENO, TCSANOW, &oldin);
-	}
+	Terminal_Controller();
+	static int get_info();
+	~Terminal_Controller();
 };
 //-----------------------------------------------------
 class Not_Init_Console_Error : public exception
 {
 private:
-	string massage = "Error: console can be crashed!!!";
+	string message = "Error: console can be crashed!!!";
 public:
-	Not_Init_Console_Error()
-	{
-
-	}
-	const char* what() const noexcept override
-	{
-		return massage.c_str();
-	}
+	Not_Init_Console_Error();
+	const char* what() const noexcept override;
 };
 //-----------------------------------------------------
-int put(string& str)
-{
-	return write(1, str.c_str(), str.size());
-}
+int putstr_(string str);
 //-----------------------------------------------------
-int get()
-{
-	if (TerminalController::get_info() != 1)
-	{
-		throw Not_Init_Console_Error();
-	}
-	char ch;
-	read(STDIN_FILENO, &ch, 1);
-	return (int)ch;
-}
+int getch_();
 //-----------------------------------------------------
-TerminalController* tc_;
+bool is_hit();
+//-----------------------------------------------------
+void wait(int milliseconds);
+//-----------------------------------------------------
+void clear_in_buffer();
+//-----------------------------------------------------
+extern Terminal_Controller* tc_;
 
-void init_console_func()
-{
-	tc_ = new TerminalController;
-}
+void init_console_func();
 
-void end_of_work_console_func()
-{
-	tc_->~TerminalController();
-}
+void end_of_work_console_func();
 //-----------------------------------------------------
 #else
-#error: "Unknown OS"
+#error "Unknown OS"
 #endif
-
-const int low_screen_x(0);
-const int up_screen_x(201);
-const int low_screen_y(0);
-const int up_screen_y(52);
 
 class Screen_Exception : public exception
 {
 private:
-	string massage = "Exite out of screen\n";
+	string massage = "Exite out of screen!!!";
 public:
-	Screen_Exception()
-	{
-	}
-	const char* what() const noexcept override
-	{
-		return massage.c_str();
-	}
+	Screen_Exception();
+	const char* what() const noexcept override;
 };
 
-size_t get_cursor_x()
+class ANSI_Doesnt_Supported_Exception : public exception
 {
-	string h = "\033[6n";
-	put(h);
-	
-}
+private:
+	string massage = "ANSI doesn't supported in this console!!!";
+public:
+	ANSI_Doesnt_Supported_Exception();
+	const char* what() const noexcept override;
+};
 
-size_t get_cursor_y()
+//cursor position
+pair<size_t, size_t> get_cursor_pos();
+
+size_t get_cursor_x();
+
+size_t get_cursor_y();
+
+void set_cursor_pos(size_t x, size_t y);
+
+//screen
+void open_new_screen();
+
+void close_screen();
+
+void clear_screen();
+
+void switch_to_big_screen();
+
+void switch_to_small_screen();
+
+//Color_Exception
+class Color_Exception : public exception
 {
+private:
+	string massage = "Error with color convertation!!!";
+public:
+	Color_Exception();
+	const char* what() const noexcept override;
+};
 
-}
-
-void check_position(int x, int y)
+//cRGB
+struct crgb
 {
-	if (x < low_screen_x || up_screen_x < x)
-	{
-		throw Screen_Exception();
-	}
-	if (y < low_screen_y || up_screen_y < y)
-	{
-		throw Screen_Exception();
-	}
-}
-
-void print_rgb(char r, char g, char b)
+	char red, green, blue;
+	crgb();
+	crgb(char r, char g, char b);
+};
+//c8bit
+struct c8bit
 {
-
-}
-
-void print_8bit()
+	char color;
+	c8bit();
+	c8bit(char color_);
+};
+//c16
+struct c16
 {
+	int color;
+	c16();
+	c16(int color_);
+};
 
-}
 
-void print_16()
-{
 
-}
+//set colors
+void set_rgb(crgb f_color, crgb b_color);
 
-void set_cursor_pos(size_t x, size_t y)
-{
-	check_position(x, y);
-	string h = "\033[" + to_string(x + 1) + ';' + to_string(y + 1) + 'H';
-	put(h);
-}
+void set_8bit(c8bit f_color, c8bit b_color);
+
+void set_16(c16 f_color, c16 b_color);

@@ -91,19 +91,6 @@ public:
 	~Picture();
 };
 
-struct RGB
-{
-	char red, green, blue;
-	RGB() : red(0), green(0), blue(0)
-	{
-
-	}
-	RGB(char r, char g, char b) : red(r), green(g), blue(b)
-	{
-
-	}
-};
-
 class Picture_RGB : public Picture
 {
 protected:

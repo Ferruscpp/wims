@@ -4,16 +4,13 @@ using namespace std;
 int main()
 {
 	init_console_func();
-	string a = "Is this shit work? ";
-	a += get();
-	a += '\n';
-	put(a);
-	string b = "it is realy intresting: ";
-	b += get();
-	string c = "realy? ";
-	c += get();
-	c += '\n';
-	put(c);
-	put(b);
+	open_new_screen();
+	switch_to_small_screen();
+	crgb a((char)255, (char)0, (char)0);
+	crgb b((char)0, (char)0, (char)255);
+	set_rgb(a, b);
+	putstr_("shit, it's work");
+	wait(10'000);
+	close_screen();
 	end_of_work_console_func();
 }
