@@ -14,9 +14,34 @@ using namespace std;
 #define __linux__ 1
 #endif
 
-struct crgb;
-struct c8bit;
-struct c16;
+//cRGB
+struct crgb
+{
+	char red, green, blue;
+	crgb();
+	crgb(char r, char g, char b);
+	friend ifstream& operator>>(ifstream& fin, crgb& color);
+	friend ostream& operator<<(ostream& fout, const crgb& color);
+};
+//c8bit
+struct c8bit
+{
+	char color;
+	c8bit();
+	c8bit(char color_);
+	friend ifstream& operator>>(ifstream& fin, c8bit& color);
+	friend ostream& operator>>(ostream& fout, const c8bit& color);
+};
+//c16
+struct c16
+{
+	int color;
+	c16();
+	c16(int color_);
+	c16& operator=(int color_);
+	friend ifstream& operator>>(ifstream& fin, c16& color);
+	friend ofstream& operator<<(ofstream& out, const c16& color);
+};
 
 class Screen_Controller
 {
@@ -169,33 +194,9 @@ public:
 	const char* what() const noexcept override;
 };
 
-//cRGB
-struct crgb
-{
-	char red, green, blue;
-	crgb();
-	crgb(char r, char g, char b);
-};
-//c8bit
-struct c8bit
-{
-	char color;
-	c8bit();
-	c8bit(char color_);
-};
-//c16
-struct c16
-{
-	int color;
-	c16();
-	c16(int color_);
-};
-
-
-
 //set colors
-void set_rgb(crgb f_color, crgb b_color);
+void set_color_rgb(crgb f_color, crgb b_color);
 
-void set_8bit(c8bit f_color, c8bit b_color);
+void set_color_8bit(c8bit f_color, c8bit b_color);
 
-void set_16(c16 f_color, c16 b_color);
+void set_color_16(c16 f_color, c16 b_color);

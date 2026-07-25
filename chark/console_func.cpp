@@ -5,6 +5,90 @@
 #define __linux__ 1
 #endif
 
+//crgb
+crgb::crgb() : red(0), green(0), blue(0)
+{
+
+}
+
+crgb::crgb(char r, char g, char b) : red(r), green(g), blue(b)
+{
+
+}
+
+ifstream& operator>>(ifstream& fin, crgb& color)
+{
+	fin >> color.red >> color.green >> color.blue;
+	return fin;
+}
+
+ostream& operator<<(ostream& fout, const crgb& color)
+{
+	fout << color.red << color.green << color.blue;
+	return fout;
+}
+
+//c8bit
+c8bit::c8bit() : color(0)
+{
+
+}
+
+c8bit::c8bit(char color_) : color(color_)
+{
+
+}
+
+ifstream& operator>>(ifstream& fin, c8bit& color)
+{
+	fin >> color.color;
+	return fin;
+}
+
+ostream& operator<<(ostream& fout, const c8bit& color)
+{
+	fout << color.color;
+	return fout;
+}
+
+//c16
+c16::c16() : color(0)
+{
+
+}
+
+c16::c16(int color_) : color(color_)
+{
+	if (color < 0 || 16 <= color)
+	{
+		throw Color_Exception();
+	}
+}
+
+c16& c16::operator=(int color_)
+{
+	if (color_ < 0 || 16 <= color_)
+	{
+		throw Color_Exception();
+	}
+	color = color_;
+	return *this;
+}
+
+ifstream& operator>>(ifstream& fin, c16& color)
+{
+	fin >> noskipws;
+	fin >> color.color;
+	fin >> skipws;
+	return fin;
+}
+
+ofstream& operator<<(ofstream& fout, const c16& color)
+{
+	fout.operator<<(color.color);
+	//fout << color.color;
+	return fout;
+}
 
 //Screen_Controller
 Screen_Controller::Screen_Controller()
@@ -54,12 +138,12 @@ Screen_Controller* sc_;
 
 c16 get_foreground_bassic_color()
 {
-	sc_->get_foreground_basic_color();
+	return sc_->get_foreground_basic_color();
 }
 
 c16 get_background_bassic_color()
 {
-	sc_->get_background_basic_color();
+	return sc_->get_background_basic_color();
 }
 
 
@@ -71,6 +155,7 @@ void start_for_all_OS()
 
 void end_for_all_OS()
 {
+	set_color_16(sc_->get_foreground_basic_color(), sc_->get_background_basic_color());
 	delete sc_;
 	//putstr_("\033[?25h");
 }
@@ -368,43 +453,6 @@ const char* Color_Exception::what() const noexcept
 	return massage.c_str();
 }
 
-
-//crgb
-crgb::crgb() : red(0), green(0), blue(0)
-{
-
-}
-
-crgb::crgb(char r, char g, char b) : red(r), green(g), blue(b)
-{
-
-}
-
-//c8bit
-c8bit::c8bit() : color(0)
-{
-
-}
-
-c8bit::c8bit(char color_) : color(color_)
-{
-	
-}
-
-//c16
-c16::c16() : color(0)
-{
-
-}
-
-c16::c16(int color_) : color(color_)
-{
-	if (color < 0 || 16 <= color)
-	{
-		throw Color_Exception();
-	}
-}
-
 /*шпаргалка
 Старая классика(упоротые 16 цветов):
 	\033[30m ... \033[37m — Текст(8 базовых)
@@ -420,43 +468,43 @@ c16::c16(int color_) : color(color_)
 */
 
 //set colors
-void set_rgb(crgb f_color, crgb b_color)
+void set_color_rgb(crgb f_color, crgb b_color)
 {
-	string f_command = "\033[38;2;" + f_color.red + ';' + f_color.green + ';' + f_color.blue + 'm';
-	string b_command = "\033[48;2;" + b_color.red + ';' + b_color.green + ';' + b_color.blue + 'm';
+	string f_command = "\033[38;2;" + to_string((int)f_color.red) + ';' + to_string((int)f_color.green) + ';' + to_string((int)f_color.blue) + 'm';
+	string b_command = "\033[48;2;" + to_string((int)b_color.red) + ';' + to_string((int)b_color.green) + ';' + to_string((int)b_color.blue) + 'm';
 	putstr_(f_command);
 	putstr_(b_command);
 }
 
-void set_8bit(c8bit f_color, c8bit b_color)
+void set_color_8bit(c8bit f_color, c8bit b_color)
 {
-	string f_command = "\033[38;5;" + f_color.color + 'm';
-	string b_command = "\033[48;5;" + b_color.color + 'm';
+	string f_command = "\033[38;5;" + to_string((int)f_color.color) + 'm';
+	string b_command = "\033[48;5;" + to_string((int)b_color.color) + 'm';
 	putstr_(f_command);
 	putstr_(b_command);
 }
 
-void set_16(c16 f_color, c16 b_color)
+void set_color_16(c16 f_color, c16 b_color)
 {
 	string f_command = "\033[";
 	if (f_color.color < 8)
 	{
-		f_command += to_string(30 + f_color.color);
+		f_command += to_string(30 + (int)f_color.color);
 	}
 	else
 	{
-		f_command += to_string(90 + f_color.color);
+		f_command += to_string(90 + (int)f_color.color);
 	}
 	f_command += 'm';
 	putstr_(f_command);
 	string b_command = "\033[";
 	if (b_color.color < 8)
 	{
-		b_command += to_string(40 + b_color.color);
+		b_command += to_string(40 + (int)b_color.color);
 	}
 	else
 	{
-		b_command += to_string(100 + b_color.color);
+		b_command += to_string(100 + (int)b_color.color);
 	}
 	b_command += 'm';
 	putstr_(b_command);

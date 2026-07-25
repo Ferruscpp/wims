@@ -11,40 +11,56 @@ class File_not_found_exception : public exception
 private:
 	string massage = "Error: file not found.\nFunction that called this exception: ";
 public:
-	File_not_found_exception(string func)
-	{
-		massage += func;
-	}
+	File_not_found_exception();
 
-	const char* what() const noexcept override
-	{
-		return massage.c_str();
-	}
+	const char* what() const noexcept override;
 };
 
 struct position
 {
 	int x, y;
-	position(int x_, int y_) : x(x_), y(y_)
-	{
-
-	}
+	position(int x_, int y_);
 };
 
 struct window4
 {
 	int x1, y1, x2, y2;
-	window4(int x1_, int y1_, int x2_, int y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
-	{
-		check_position(x1, y1);
-		check_position(x2, y2);
-		if (x2 < x1 || y2 < y1)
-		{
-			throw Screen_Exception();
-		}
-	}
+	window4(int x1_, int y1_, int x2_, int y2_);
 };
 
+class Pixel_rgb
+{
+private:
+
+public:
+
+};
+
+class Pixel_8bit
+{
+private:
+
+public:
+
+};
+
+class Pixel_16
+{
+private:
+	char symbol;
+	c16 foreground, background;
+public:
+	Pixel_16();
+	Pixel_16(char symbol_, c16 foreground_, c16 background_);
+	void draw();
+	void set(char& symbol_);
+	void set(c16& foreground_, c16& background_);
+	void set(char& symbol_, c16& foreground_, c16& background_);
+	friend ifstream& operator>>(ifstream& fin, Pixel_16& pixel);
+	friend ofstream& operator<<(ofstream& fout, Pixel_16& pixel);
+};
+
+template<typename T>
 class Picture
 {
 protected:
@@ -55,18 +71,14 @@ protected:
 	const string color_background_name = "_color_background.pic";
 	size_t size_x = 80;
 	size_t size_y = 25;
+	//надо добавить всякие там таблицы
 	class Picture_Exception : public exception
 	{
 	private:
 		string message = "Exite out of picture range\n";
 	public:
-		Picture_Exception()
-		{
-		}
-		const char* what() const noexcept override
-		{
-			return message.c_str();
-		}
+		Picture_Exception();
+		const char* what() const noexcept override;
 	};
 	//
 	string get_symbol_file_name() const;
@@ -89,28 +101,4 @@ public:
 	void rename(string new_name);
 	void change_folder(string new_folder);
 	~Picture();
-};
-
-class Picture_RGB : public Picture
-{
-protected:
-	string* symbol;
-	RGB** foreground;
-	RGB** background;
-	void draw_pixel() override;
-	void dounload() const override;
-	void upload() override;
-public:
-	Picture_RGB(string name_);
-	Picture_RGB(string name_, int x, int y);
-};
-
-class Picture_8bit
-{
-
-};
-
-class Picture_16
-{
-
 };

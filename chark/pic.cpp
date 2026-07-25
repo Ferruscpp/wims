@@ -1,22 +1,119 @@
 #include "pic.h"
 
+//File_not_found_exception
+File_not_found_exception::File_not_found_exception()
+{
+
+}
+
+const char* File_not_found_exception::what() const noexcept
+{
+	return massage.c_str();
+}
+
+//position
+position::position(int x_, int y_) : x(x_), y(y_)
+{
+
+}
+
+//window4
+window4::window4(int x1_, int y1_, int x2_, int y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
+{
+	check_position(x1, y1);
+	check_position(x2, y2);
+	if (x2 < x1 || y2 < y1)
+	{
+		throw Screen_Exception();
+	}
+}
+
+//Pixel_16
+Pixel_16::Pixel_16() : symbol(' ')
+{
+	
+}
+
+Pixel_16::Pixel_16(char symbol_, c16 foreground_, c16 background_) : symbol(symbol_), foreground(foreground_), background(background_)
+{
+
+}
+
+void Pixel_16::draw()
+{
+	set_color_16(foreground, background);
+	putstr_(&symbol);
+}
+
+void Pixel_16::set(char& symbol_)
+{
+	symbol = symbol_;
+}
+
+void Pixel_16::set(c16& foreground_, c16& background_)
+{
+	foreground = foreground_;
+	background = background_;
+}
+
+void Pixel_16::set(char& symbol_, c16& foreground_, c16& background_)
+{
+	symbol = symbol_;
+	foreground = foreground_;
+	background = background_;
+}
+
+ifstream& operator>>(ifstream& fin, Pixel_16& pixel)
+{
+	fin >> noskipws;
+	fin >> pixel.symbol;
+	fin >> skipws;
+	fin >> pixel.foreground >> pixel.background;
+	return fin;
+}
+
+ofstream& operator<<(ofstream& fout, Pixel_16& pixel)
+{
+	fout << pixel.symbol;
+	fout << pixel.foreground;
+	return fout;
+}
+
+
+//Picture_Exception
+template<typename T>
+Picture<T>::Picture_Exception::Picture_Exception()
+{
+
+}
+
+template<typename T>
+const char* Picture<T>::Picture_Exception::what() const noexcept
+{
+	return message.c_str();
+}
+
 //Picture protected
-string Picture::get_symbol_file_name() const
+template<typename T>
+string Picture<T>::get_symbol_file_name() const
 {
 	return folder_name + picture_name + symbol_name;
 }
 
-string Picture::get_foreground_file_name() const
+template<typename T>
+string Picture<T>::get_foreground_file_name() const
 {
 	return folder_name + picture_name + color_foreground_name;
 }
 
-string Picture::get_background_file_name() const
+template<typename T>
+string Picture<T>::get_background_file_name() const
 {
 	return folder_name + picture_name + color_background_name;
 }
 
-void Picture::build_files()
+template<typename T>
+void Picture<T>::build_files()
 {
 	ofstream symbol_out(get_symbol_file_name());
 	ofstream foreground_out(get_foreground_file_name());
@@ -26,7 +123,8 @@ void Picture::build_files()
 	background_out.close();
 }
 
-void Picture::update_path()
+template<typename T>
+void Picture<T>::update_path()
 {
 	int seporator_position = 0;
 	string new_picture_name;
@@ -53,25 +151,28 @@ void Picture::update_path()
 }
 
 //Picture public
-Picture::Picture(string name_) : picture_name(name_)
+template<typename T>
+Picture<T>::Picture(string name_) : picture_name(name_)
 {
 	update_path();
 	ifstream in(get_symbol_file_name());
-	if (in.is_open())
+	if (!in.is_open())
 	{
-		throw File_not_found_exception("Picture::Picture(string name_);");
+		throw File_not_found_exception();
 	}
 	in.close();
 	upload();
 }
 
-Picture::Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
+template<typename T>
+Picture<T>::Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
 {
 	update_path();
 	build_files();
 }
 
-void Picture::draw()
+template<typename T>
+void Picture<T>::draw()
 {
 	check_position(get_cursor_x() + size_x, get_cursor_y() + size_y);
 	for (size_t y = 0; y < size_y; ++y)
@@ -82,30 +183,29 @@ void Picture::draw()
 		}
 	}
 }
-
-void Picture::draw(position cur_pos)
+template<typename T>
+void Picture<T>::draw(position cur_pos)
 {
 	set_cursor_pos(cur_pos.x, cur_pos.y);
 	draw();
 }
 
-void Picture::seg_draw(position pic_pos, window4 cur_pos)
+template<typename T>
+void Picture<T>::seg_draw(position pic_pos, window4 cur_pos)
 {
 	if (size_x <= pic_pos.x || size_y <= pic_pos.y)
 	{
 		throw Picture_Exception();
 	}
 	set_cursor_pos(cur_pos.x1, cur_pos.y1);
-	for (size_t i = 0; i < ; i++)
+	for (size_t i = 0; i < 0; i++)
 	{
 
 	}
 }
 
-Picture::~Picture()
+template<typename T>
+Picture<T>::~Picture()
 {
 
 }
-
-
-//Picture_RGB
