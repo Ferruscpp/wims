@@ -20,8 +20,8 @@ struct crgb
 	char red, green, blue;
 	crgb();
 	crgb(char r, char g, char b);
-	friend ifstream& operator>>(ifstream& fin, crgb& color);
-	friend ostream& operator<<(ostream& fout, const crgb& color);
+	friend istream& operator>>(istream& in, crgb& color);
+	friend ostream& operator<<(ostream& out, const crgb& color);
 };
 //c8bit
 struct c8bit
@@ -29,8 +29,8 @@ struct c8bit
 	char color;
 	c8bit();
 	c8bit(char color_);
-	friend ifstream& operator>>(ifstream& fin, c8bit& color);
-	friend ostream& operator>>(ostream& fout, const c8bit& color);
+	friend istream& operator>>(istream& in, c8bit& color);
+	friend ostream& operator>>(ostream& out, const c8bit& color);
 };
 //c16
 struct c16
@@ -39,8 +39,8 @@ struct c16
 	c16();
 	c16(int color_);
 	c16& operator=(int color_);
-	friend ifstream& operator>>(ifstream& fin, c16& color);
-	friend ofstream& operator<<(ofstream& out, const c16& color);
+	friend istream& operator>>(istream& in, c16& color);
+	friend ostream& operator<<(ostream& out, const c16& color);
 };
 
 class Screen_Controller

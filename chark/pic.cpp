@@ -28,55 +28,93 @@ window4::window4(int x1_, int y1_, int x2_, int y2_) : x1(x1_), y1(y1_), x2(x2_)
 	}
 }
 
-//Pixel_16
-Pixel_16::Pixel_16() : symbol(' ')
+//Console_Pixel_16
+Console_Pixel_16::Console_Pixel_16() : symbol(' '), foreground(7), background(0)
 {
 	
 }
 
-Pixel_16::Pixel_16(char symbol_, c16 foreground_, c16 background_) : symbol(symbol_), foreground(foreground_), background(background_)
+Console_Pixel_16::Console_Pixel_16(char symbol_, c16 foreground_, c16 background_) : symbol(symbol_), foreground(foreground_), background(background_)
 {
 
 }
 
-void Pixel_16::draw()
+void Console_Pixel_16::draw() const
 {
 	set_color_16(foreground, background);
-	putstr_(&symbol);
+	string h;
+	h += symbol;
+	putstr_(h);
 }
 
-void Pixel_16::set(char& symbol_)
+void Console_Pixel_16::set(char symbol_)
 {
 	symbol = symbol_;
 }
 
-void Pixel_16::set(c16& foreground_, c16& background_)
+void Console_Pixel_16::set(c16 foreground_, c16 background_)
 {
 	foreground = foreground_;
 	background = background_;
 }
 
-void Pixel_16::set(char& symbol_, c16& foreground_, c16& background_)
+void Console_Pixel_16::set(char symbol_, c16 foreground_, c16 background_)
 {
 	symbol = symbol_;
 	foreground = foreground_;
 	background = background_;
 }
 
-ifstream& operator>>(ifstream& fin, Pixel_16& pixel)
+istream& operator>>(istream& in, Console_Pixel_16& pixel)
 {
-	fin >> noskipws;
-	fin >> pixel.symbol;
-	fin >> skipws;
-	fin >> pixel.foreground >> pixel.background;
-	return fin;
+	in >> noskipws;
+	in >> pixel.symbol;
+	in >> skipws;
+	in >> pixel.foreground >> pixel.background;
+	return in;
 }
 
-ofstream& operator<<(ofstream& fout, Pixel_16& pixel)
+ostream& operator<<(ostream& out, const Console_Pixel_16& pixel)
 {
-	fout << pixel.symbol;
-	fout << pixel.foreground;
-	return fout;
+	out << pixel.symbol << pixel.background << pixel.foreground;
+	return out;
+}
+
+//Pixel
+template<typename T>
+Pixel<T>::Pixel() : first(), second()
+{
+	
+}
+
+template<typename T>
+Pixel<T>::Pixel(T first_, T second_) : first(first_), second(second_)
+{
+	
+}
+
+template<typename T>
+void Pixel<T>::draw() const
+{
+	first.draw();
+	second.draw();
+}
+
+template<typename T>
+istream& operator>>(istream& in, Pixel<T>& pixel)
+{
+	in >> noskipws;
+	in >> pixel.symbol;
+	in >> skipws;
+	in >> pixel.foreground >> pixel.background;
+	return in;
+}
+
+template<typename T>
+ostream& operator<<(ostream& out, const Pixel<T>& pixel)
+{
+	out << pixel.symbol << pixel.background << pixel.foreground;
+	return out;
 }
 
 

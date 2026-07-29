@@ -16,16 +16,16 @@ crgb::crgb(char r, char g, char b) : red(r), green(g), blue(b)
 
 }
 
-ifstream& operator>>(ifstream& fin, crgb& color)
+istream& operator>>(istream& in, crgb& color)
 {
-	fin >> color.red >> color.green >> color.blue;
-	return fin;
+	in >> color.red >> color.green >> color.blue;
+	return in;
 }
 
-ostream& operator<<(ostream& fout, const crgb& color)
+ostream& operator<<(ostream& out, const crgb& color)
 {
-	fout << color.red << color.green << color.blue;
-	return fout;
+	out << color.red << color.green << color.blue;
+	return out;
 }
 
 //c8bit
@@ -39,16 +39,16 @@ c8bit::c8bit(char color_) : color(color_)
 
 }
 
-ifstream& operator>>(ifstream& fin, c8bit& color)
+istream& operator>>(istream& in, c8bit& color)
 {
-	fin >> color.color;
-	return fin;
+	in >> color.color;
+	return in;
 }
 
-ostream& operator<<(ostream& fout, const c8bit& color)
+ostream& operator<<(ostream& out, const c8bit& color)
 {
-	fout << color.color;
-	return fout;
+	out << color.color;
+	return out;
 }
 
 //c16
@@ -75,19 +75,18 @@ c16& c16::operator=(int color_)
 	return *this;
 }
 
-ifstream& operator>>(ifstream& fin, c16& color)
+istream& operator>>(istream& in, c16& color)
 {
-	fin >> noskipws;
-	fin >> color.color;
-	fin >> skipws;
-	return fin;
+	in >> noskipws;
+	in >> color.color;
+	in >> skipws;
+	return in;
 }
 
-ofstream& operator<<(ofstream& fout, const c16& color)
+ostream& operator<<(ostream& out, const c16& color)
 {
-	fout.operator<<(color.color);
-	//fout << color.color;
-	return fout;
+	out << color.color;
+	return out;
 }
 
 //Screen_Controller

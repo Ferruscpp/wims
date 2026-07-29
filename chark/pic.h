@@ -28,6 +28,7 @@ struct window4
 	window4(int x1_, int y1_, int x2_, int y2_);
 };
 
+//need realizatin
 class Pixel_rgb
 {
 private:
@@ -36,6 +37,7 @@ public:
 
 };
 
+//need realizetion
 class Pixel_8bit
 {
 private:
@@ -44,20 +46,32 @@ public:
 
 };
 
-class Pixel_16
+class Console_Pixel_16
 {
 private:
 	char symbol;
 	c16 foreground, background;
 public:
-	Pixel_16();
-	Pixel_16(char symbol_, c16 foreground_, c16 background_);
-	void draw();
-	void set(char& symbol_);
-	void set(c16& foreground_, c16& background_);
-	void set(char& symbol_, c16& foreground_, c16& background_);
-	friend ifstream& operator>>(ifstream& fin, Pixel_16& pixel);
-	friend ofstream& operator<<(ofstream& fout, Pixel_16& pixel);
+	Console_Pixel_16();
+	Console_Pixel_16(char symbol_, c16 foreground_, c16 background_);
+	void draw() const;
+	void set(char symbol_);
+	void set(c16 foreground_, c16 background_);
+	void set(char symbol_, c16 foreground_, c16 background_);
+	friend istream& operator>>(istream& in, Console_Pixel_16& pixel);
+	friend ostream& operator<<(ostream& out, const Console_Pixel_16& pixel);
+};
+
+template<typename T>
+class Pixel
+{
+public:
+	T first, second;
+	Pixel();
+	Pixel(T first_, T second_);
+	void draw() const;
+	friend istream& operator>>(istream& in, Pixel& pixel);
+	friend ostream& operator<<(ostream& out, Pixel& pixel);
 };
 
 template<typename T>
