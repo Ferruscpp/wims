@@ -117,10 +117,9 @@ public:
 template<typename T>
 class Pixel
 {
-private:
-	T first, second;
 public:
-	Pixel() : first(), second()
+	T first, second;
+	Pixel() : first(' ', get_foreground_bassic_color(), get_background_bassic_color()), second(' ', get_foreground_bassic_color(), get_background_bassic_color())
 	{
 		
 	}
@@ -167,10 +166,7 @@ protected:
 	class Picture_Exception : public exception
 	{
 	private:
-		string message = "Exite out of picture range\n"
-		{
-
-		}
+		string message = "Exite out of picture range\n";
 	public:
 		Picture_Exception();
 		const char* what() const noexcept override
@@ -191,10 +187,9 @@ protected:
 	{
 		return folder_name + picture_name + color_background_name;
 	}
-	// pure vertual
-	virtual void draw_pixel(int x, int y) = 0;
-	virtual void dounload() const = 0;
-	virtual void upload() = 0;
+	//save
+	void dounload() const;
+	void upload();
 	//
 	void build_files()
 	{
