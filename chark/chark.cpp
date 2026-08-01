@@ -8,8 +8,8 @@ int main()
 	open_new_screen();
 	switch_to_small_screen();
 	Pixel<Console_Pixel_16> a;
-	a.first.set('5');
-	a.second.set('5');
+	//a.first.set('5');
+	//a.second.set('5');
 	//a.draw();
 	wait(10'000);
 	close_screen();
