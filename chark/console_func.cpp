@@ -65,9 +65,27 @@ c16::c16(int color_) : color(color_)
 	}
 }
 
+c16::c16(char color_) : color(color_)
+{
+	if (16 <= (int)color)
+	{
+		throw Color_Exception();
+	}
+}
+
 c16& c16::operator=(int color_)
 {
 	if (color_ < 0 || 16 <= color_)
+	{
+		throw Color_Exception();
+	}
+	color = color_;
+	return *this;
+}
+
+c16& c16::operator=(char color_)
+{
+	if (16 <= (int)color_)
 	{
 		throw Color_Exception();
 	}

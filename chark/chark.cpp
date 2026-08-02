@@ -7,13 +7,34 @@ int main()
 	init_console_func();
 	open_new_screen();
 	switch_to_small_screen();
-	Pixel<Console_Pixel_16> a;
-	a.first.set(' ');
-	a.second.set(' ');
-	a.first.set(5, 2);
-	a.second.set(5, 2);
-	a.draw();
-	wait(10'000);
+	//c16 a(15), b(6);
+	//cout << ' ' << a << b;
+	//goto shit;
+	try
+	{
+		bool build;
+		Picture<Pixel<Console_Pixel_16>> a("Second_picture"); build = false;
+		//Picture<Pixel<Console_Pixel_16>> a("Second_picture", 5, 5); build = true;
+		if (build)
+		{
+			for (int x = 0; x < 5; x++)
+			{
+				for (int y = 0; y < 5; y++)
+				{
+					a.get_pixel({ x, y }).pixel.set(15, 6);
+				}
+			}
+		}
+		a.draw();
+		a.~Picture();
+		putstr_("This was done!!!");
+	}
+	catch (exception)
+	{
+		cout << "ERROR!!!\n";
+	}
+shit:
+	wait(3'000);
 	close_screen();
 	end_of_work_console_func();
 }

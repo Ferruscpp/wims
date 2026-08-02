@@ -35,10 +35,12 @@ struct c8bit
 //c16
 struct c16
 {
-	int color;
+	char color;
 	c16();
 	c16(int color_);
+	c16(char color_);
 	c16& operator=(int color_);
+	c16& operator=(char color_);
 	friend istream& operator>>(istream& in, c16& color);
 	friend ostream& operator<<(ostream& out, const c16& color);
 };

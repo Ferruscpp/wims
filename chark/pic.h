@@ -9,7 +9,7 @@ using namespace std;
 class File_not_found_exception : public exception
 {
 private:
-	string massage = "Error: file not found.\nFunction that called this exception: ";
+	string massage = "Error: file not found.!!!";
 public:
 	File_not_found_exception()
 	{
@@ -22,7 +22,7 @@ public:
 	}
 };
 
-struct position
+struct position//this is shit
 {
 	int x, y;
 	position(int x_, int y_) : x(x_), y(y_)
@@ -118,31 +118,28 @@ template<typename T>
 class Pixel
 {
 public:
-	T first, second;
-	Pixel() : first(' ', get_foreground_bassic_color(), get_background_bassic_color()), second(' ', get_foreground_bassic_color(), get_background_bassic_color())
+	T pixel;
+	Pixel() : pixel(' ', get_foreground_bassic_color(), get_background_bassic_color())
 	{
 		
 	}
-	Pixel(T first_, T second_) : first(first_), second(second_)
+	Pixel(T pixel_) : pixel(pixel_)
 	{
 
 	}
 	void draw() const
 	{
-		first.draw();
-		second.draw();
+		pixel.draw();
+		pixel.draw();
 	}
 	friend istream& operator>>(istream& in, Pixel& pixel)
 	{
-		in >> noskipws;
-		in >> pixel.symbol;
-		in >> skipws;
-		in >> pixel.foreground >> pixel.background;
+		in >> pixel.pixel;
 		return in;
 	}
 	friend ostream& operator<<(ostream& out, const Pixel& pixel)
 	{
-		out << pixel.symbol << pixel.background << pixel.foreground;
+		out << pixel.pixel;
 		return out;
 	}
 	~Pixel()
@@ -154,19 +151,18 @@ public:
 template<typename T>
 class Picture
 {
-protected:
+private:
+	string folder_name = "./Pictures";
 	string picture_name;
-	string folder_name = "./Pictures/";
-	const string symbol_name = "_symbol.pic";
-	const string color_foreground_name = "_color_foreground.pic";
-	const string color_background_name = "_color_background.pic";
+	const string end_name = ".pic";
 	size_t size_x = 80;
 	size_t size_y = 25;
-	//надо добавить всякие там таблицы
+	T* pixel_table[100][100];
+	//
 	class Picture_Exception : public exception
 	{
 	private:
-		string message = "Exite out of picture range\n";
+		string message = "Exite out of picture range!!!";
 	public:
 		Picture_Exception();
 		const char* what() const noexcept override
@@ -175,37 +171,56 @@ protected:
 		}
 	};
 	//
-	string get_symbol_file_name() const
+	string get_file_name() const
 	{
-		return folder_name + picture_name + symbol_name;
+		return folder_name + '/' + picture_name + end_name;
 	}
-	string get_foreground_file_name() const
+	void dounload() const
 	{
-		return folder_name + picture_name + color_foreground_name;
+		ifstream in(get_file_name());
+		if (!in.is_open())
+		{
+			throw File_not_found_exception();
+		}
+		for (size_t y = 0; y < size_y; ++y)
+		{
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				in >> *pixel_table[x][y];
+			}
+		}
 	}
-	string get_background_file_name() const
+	void upload()
 	{
-		return folder_name + picture_name + color_background_name;
+		ofstream out(get_file_name());
+		for (size_t y = 0; y < size_y; ++y)
+		{
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				out << *pixel_table[x][y];
+			}
+		}
+		out.close();
+		return;
 	}
-	//save
-	void dounload() const;
-	void upload();
-	//
-	void build_files()
+	bool exist()
 	{
-		ofstream symbol_out(get_symbol_file_name());
-		ofstream foreground_out(get_foreground_file_name());
-		ofstream background_out(get_background_file_name());
-		symbol_out.close();
-		foreground_out.close();
-		background_out.close();
+		ifstream in(get_file_name());
+		bool answer = in.is_open();
+		in.close();
+		return answer;
+	}
+	void build_file()
+	{
+		ofstream out(get_file_name());
+		out.close();
 	}
 	//
 	void update_path()
 	{
-		int seporator_position = 0;
+		int seporator_position = -1;
 		string new_picture_name;
-		for (int i = picture_name.size() - 1; i >= 0; i--)
+		for (int i = picture_name.size() - 1; i >= 0; --i)
 		{
 			if (picture_name[i] == '/')
 			{
@@ -213,7 +228,11 @@ protected:
 				break;
 			}
 		}
-		for (int i = 0; i < picture_name.size(); i++)
+		if (seporator_position > 0)
+		{
+			folder_name += '/';
+		}
+		for (int i = 0; i < picture_name.size(); ++i)
 		{
 			if (i < seporator_position)
 			{
@@ -226,22 +245,39 @@ protected:
 		}
 		picture_name = new_picture_name;
 	}
+	//
+	void check_picture_position(position pic_pos)
+	{
+		if (pic_pos.x < 0 || size_x <= pic_pos.x)
+		{
+			throw Picture_Exception();
+		}
+		if (pic_pos.y < 0 || size_y <= pic_pos.y)
+		{
+			throw Picture_Exception();
+		}
+	}
 public:
 	Picture(string name_) : picture_name(name_)
 	{
 		update_path();
-		ifstream in(get_symbol_file_name());
-		if (!in.is_open())
+		if (!exist())
 		{
 			throw File_not_found_exception();
 		}
-		in.close();
-		upload();
+		dounload();
 	}
 	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
 	{
 		update_path();
-		build_files();
+		build_file();
+		for (size_t y = 0; y < size_y; ++y)
+		{
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				pixel_table[x][y] = new T;
+			}
+		}
 	}
 	void draw()
 	{
@@ -250,7 +286,11 @@ public:
 		{
 			for (size_t x = 0; x < size_x; ++x)
 			{
-				draw_pixel(x, y);
+				pixel_table[x][y]->draw();
+			}
+			if (y != size_y - 1)
+			{
+				putstr_("\n");
 			}
 		}
 	}
@@ -259,17 +299,15 @@ public:
 		set_cursor_pos(cur_pos.x, cur_pos.y);
 		draw();
 	}
+	T& get_pixel(position pic_pos)
+	{
+		//check_picture_position(pic_pos);
+		return *(pixel_table[pic_pos.x][pic_pos.y]);
+	}
+	//TODO
 	void seg_draw(position pic_pos, window4 cur_pos)
 	{
-		if (size_x <= pic_pos.x || size_y <= pic_pos.y)
-		{
-			throw Picture_Exception();
-		}
-		set_cursor_pos(cur_pos.x1, cur_pos.y1);
-		for (size_t i = 0; i < 0; i++)
-		{
-
-		}
+		
 	}
 	void rename(string new_name)
 	{
@@ -279,8 +317,16 @@ public:
 	{
 
 	}
+	//DONE
 	~Picture()
 	{
-
+		upload();
+		for (size_t y = 0; y < size_y; ++y)
+		{
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				pixel_table[x][y]->~T();
+			}
+		}
 	}
 };
