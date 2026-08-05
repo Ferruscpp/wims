@@ -22,12 +22,24 @@ public:
 	}
 };
 
-struct position//this is shit
+struct position//this is shit. maybe not now
 {
-	int x, y;
+	size_t x, y;
+	position(size_t x_, size_t y_) : x(x_), y(y_)
+	{
+
+	}
 	position(int x_, int y_) : x(x_), y(y_)
 	{
 
+	}
+	explicit position(pair<size_t, size_t> pos) : x(pos.first), y(pos.second)
+	{
+
+	}
+	operator pair<size_t, size_t>() const
+	{
+		return make_pair((size_t)x, (size_t)y);
 	}
 };
 
@@ -257,20 +269,9 @@ private:
 			throw Picture_Exception();
 		}
 	}
-public:
-	Picture(string name_) : picture_name(name_)
+	//
+	void build_pixel_table()
 	{
-		update_path();
-		if (!exist())
-		{
-			throw File_not_found_exception();
-		}
-		dounload();
-	}
-	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
-	{
-		update_path();
-		build_file();
 		for (size_t y = 0; y < size_y; ++y)
 		{
 			for (size_t x = 0; x < size_x; ++x)
@@ -279,9 +280,32 @@ public:
 			}
 		}
 	}
+public:
+	Picture(string name_) : picture_name(name_)
+	{
+		update_path();
+		if (!exist())
+		{
+			throw File_not_found_exception();
+		}
+		build_pixel_table();
+		dounload();
+	}
+	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
+	{
+		update_path();
+		build_file();
+		build_pixel_table();
+	}
 	void draw()
 	{
-		check_position(get_cursor_x() + size_x, get_cursor_y() + size_y);
+		draw((position)get_cursor_pos());
+	}
+	void draw(position cur_pos)
+	{
+		check_position(cur_pos.x, cur_pos.y);
+		check_position(cur_pos.x + size_x, cur_pos.y + size_y);
+		set_cursor_pos(cur_pos.x, cur_pos.y);
 		for (size_t y = 0; y < size_y; ++y)
 		{
 			for (size_t x = 0; x < size_x; ++x)
@@ -290,14 +314,9 @@ public:
 			}
 			if (y != size_y - 1)
 			{
-				putstr_("\n");
+				set_cursor_pos(cur_pos.x, cur_pos.y + y);
 			}
 		}
-	}
-	void draw(position cur_pos)
-	{
-		set_cursor_pos(cur_pos.x, cur_pos.y);
-		draw();
 	}
 	T& get_pixel(position pic_pos)
 	{

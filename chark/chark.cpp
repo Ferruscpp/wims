@@ -10,6 +10,10 @@ int main()
 	//c16 a(15), b(6);
 	//cout << ' ' << a << b;
 	//goto shit;
+	while (!is_hit_())
+	{
+
+	}
 	try
 	{
 		bool build;
@@ -34,7 +38,10 @@ int main()
 		cout << "ERROR!!!\n";
 	}
 shit:
-	wait(3'000);
+	while (!is_hit_())
+	{
+
+	}
 	close_screen();
 	end_of_work_console_func();
 }
