@@ -210,7 +210,7 @@ bool is_hit_()
 	return _kbhit();
 }
 //wait
-void wait(int milliseconds)
+void wait(size_t milliseconds)
 {
 	Sleep(milliseconds);
 }
@@ -427,7 +427,7 @@ size_t get_cursor_y()
 void set_cursor_pos(size_t x, size_t y)
 {
 	check_position(x, y);
-	string h = "\033[" + to_string(x + 1) + ';' + to_string(y + 1) + 'H';
+	string h = "\033[" + to_string(y + 1) + ';' + to_string(x + 1) + 'H';
 	putstr_(h);
 }
 

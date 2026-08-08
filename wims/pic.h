@@ -121,7 +121,7 @@ public:
 	}
 	friend ostream& operator<<(ostream& out, const Console_Pixel_16& pixel)
 	{
-		out << pixel.symbol << pixel.background << pixel.foreground;
+		out << pixel.symbol << pixel.foreground << pixel.background;
 		return out;
 	}
 };
@@ -167,8 +167,8 @@ private:
 	string folder_name = "./Pictures";
 	string picture_name;
 	const string end_name = ".pic";
-	size_t size_x = 80;
-	size_t size_y = 25;
+	uint32_t size_x = 80;
+	uint32_t size_y = 25;
 	T* pixel_table[100][100];
 	//
 	class Picture_Exception : public exception
@@ -187,13 +187,15 @@ private:
 	{
 		return folder_name + '/' + picture_name + end_name;
 	}
-	void dounload() const
+	void dounload()
 	{
 		ifstream in(get_file_name());
 		if (!in.is_open())
 		{
 			throw File_not_found_exception();
 		}
+		in.read(reinterpret_cast<char*>(&size_x), sizeof(size_x));
+		in.read(reinterpret_cast<char*>(&size_y), sizeof(size_y));
 		for (size_t y = 0; y < size_y; ++y)
 		{
 			for (size_t x = 0; x < size_x; ++x)
@@ -205,6 +207,8 @@ private:
 	void upload()
 	{
 		ofstream out(get_file_name());
+		out.write(reinterpret_cast<const char*>(&size_x), sizeof(size_x));
+		out.write(reinterpret_cast<const char*>(&size_y), sizeof(size_y));
 		for (size_t y = 0; y < size_y; ++y)
 		{
 			for (size_t x = 0; x < size_x; ++x)
@@ -314,7 +318,7 @@ public:
 			}
 			if (y != size_y - 1)
 			{
-				set_cursor_pos(cur_pos.x, cur_pos.y + y);
+				set_cursor_pos(cur_pos.x, cur_pos.y + y + 1);
 			}
 		}
 	}

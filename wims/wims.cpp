@@ -9,7 +9,6 @@ int main()
 	switch_to_small_screen();
 	//c16 a(15), b(6);
 	//cout << ' ' << a << b;
-	//goto shit;
 	while (!is_hit_())
 	{
 
@@ -31,13 +30,12 @@ int main()
 		}
 		a.draw();
 		a.~Picture();
-		putstr_("This was done!!!");
+		//putstr_("This was done!!!");
 	}
 	catch (exception)
 	{
 		cout << "ERROR!!!\n";
 	}
-shit:
 	while (!is_hit_())
 	{
 
