@@ -9,7 +9,7 @@ using namespace std;
 class File_not_found_exception : public exception
 {
 private:
-	string massage = "Error: file not found.!!!";
+	string massage = "Error: file not found!!!";
 public:
 	File_not_found_exception()
 	{
@@ -22,7 +22,7 @@ public:
 	}
 };
 
-struct position//this is shit. maybe not now
+struct position
 {
 	size_t x, y;
 	position(size_t x_, size_t y_) : x(x_), y(y_)
@@ -45,15 +45,50 @@ struct position//this is shit. maybe not now
 
 struct window4
 {
-	int x1, y1, x2, y2;
-	window4(int x1_, int y1_, int x2_, int y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
+	size_t x1, y1, x2, y2;
+private:
+	class Window_Exception : exception
+	{
+	private:
+		string massage = "Error: wrong angle position!!!";
+	public:
+		Window_Exception()
+		{
+
+		}
+
+		const char* what() const noexcept override
+		{
+			return massage.c_str();
+		}
+	};
+	void check_window4()
+	{
+		if (x2 < x1 || y2 < y1)
+		{
+			throw Window_Exception();
+		}
+	}
+public:
+	window4(size_t x1_, size_t y1_, size_t x2_, size_t y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
+	{
+		check_window4();
+	}
+	window4(position left_up_angle, position right_down_angle) : x1(left_up_angle.x), y1(left_up_angle.y), x2(right_down_angle.x), y2(right_down_angle.y)
+	{
+		check_window4();
+	}
+	window4(initializer_list<size_t> list)
+	{
+		x1 = *list.begin();
+		y1 = *(list.begin() + 1);
+		x2 = *(list.begin() + 2);
+		y2 = *(list.begin() + 3);
+	}
+	void screen_check()
 	{
 		check_position(x1, y1);
 		check_position(x2, y2);
-		if (x2 < x1 || y2 < y1)
-		{
-			throw Screen_Exception();
-		}
 	}
 };
 
@@ -176,7 +211,10 @@ private:
 	private:
 		string message = "Exite out of picture range!!!";
 	public:
-		Picture_Exception();
+		Picture_Exception()
+		{
+
+		}
 		const char* what() const noexcept override
 		{
 			return message.c_str();
@@ -301,36 +339,40 @@ public:
 		build_file();
 		build_pixel_table();
 	}
+	void seg_draw(position pic_pos, window4 cur_pos)
+	{
+		check_picture_position(pic_pos);
+		cur_pos.screen_check();
+		check_picture_position({ pic_pos.x + cur_pos.x2 - cur_pos.x1, pic_pos.y + cur_pos.y2 - cur_pos.y1 });
+		set_cursor_pos(cur_pos.x1, cur_pos.y1);
+		for (size_t y = pic_pos.y; y + cur_pos.y1 <= cur_pos.y2; ++y)
+		{
+			for (size_t x = pic_pos.x; x + cur_pos.x1 <= cur_pos.x2; ++x)
+			{
+				pixel_table[x][y]->draw();
+			}
+			if (y + cur_pos.y1 + 1 <= cur_pos.y2)
+			{
+				set_cursor_pos(cur_pos.x1, cur_pos.y1 + y + 1);
+			}
+		}
+	}
+	void draw_from(position pic_pos)
+	{
+
+	}
+	void draw(position cur_pos)
+	{
+		seg_draw(position(0, 0), window4(cur_pos, position(cur_pos.x + size_x - 1, cur_pos.y + size_y - 1)));
+	}
 	void draw()
 	{
 		draw((position)get_cursor_pos());
 	}
-	void draw(position cur_pos)
-	{
-		check_position(cur_pos.x, cur_pos.y);
-		check_position(cur_pos.x + size_x, cur_pos.y + size_y);
-		set_cursor_pos(cur_pos.x, cur_pos.y);
-		for (size_t y = 0; y < size_y; ++y)
-		{
-			for (size_t x = 0; x < size_x; ++x)
-			{
-				pixel_table[x][y]->draw();
-			}
-			if (y != size_y - 1)
-			{
-				set_cursor_pos(cur_pos.x, cur_pos.y + y + 1);
-			}
-		}
-	}
 	T& get_pixel(position pic_pos)
 	{
-		//check_picture_position(pic_pos);
+		check_picture_position(pic_pos);
 		return *(pixel_table[pic_pos.x][pic_pos.y]);
-	}
-	//TODO
-	void seg_draw(position pic_pos, window4 cur_pos)
-	{
-		
 	}
 	void rename(string new_name)
 	{
@@ -340,7 +382,6 @@ public:
 	{
 
 	}
-	//DONE
 	~Picture()
 	{
 		upload();
