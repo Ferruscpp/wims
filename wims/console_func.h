@@ -70,9 +70,9 @@ public:
 
 void check_position(int x, int y);
 
-c16 get_foreground_bassic_color();
+c16 get_foreground_basic_color();
 
-c16 get_background_bassic_color();
+c16 get_background_basic_color();
 
 extern Screen_Controller* sc_;
 

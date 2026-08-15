@@ -153,12 +153,12 @@ void check_position(int x, int y)
 
 Screen_Controller* sc_;
 
-c16 get_foreground_bassic_color()
+c16 get_foreground_basic_color()
 {
 	return sc_->get_foreground_basic_color();
 }
 
-c16 get_background_bassic_color()
+c16 get_background_basic_color()
 {
 	return sc_->get_background_basic_color();
 }
@@ -174,7 +174,7 @@ void end_for_all_OS()
 {
 	set_color_16(sc_->get_foreground_basic_color(), sc_->get_background_basic_color());
 	delete sc_;
-	//putstr_("\033[?25h");
+	putstr_("\033[?25h");
 }
 
 #if _WIN32

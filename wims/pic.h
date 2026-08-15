@@ -120,7 +120,7 @@ public:
 	{
 
 	}
-	Console_Pixel_16(char symbol_, c16 foreground_, c16 background_) : symbol(' '), foreground(get_foreground_bassic_color()), background(get_background_bassic_color())
+	Console_Pixel_16(char symbol_, c16 foreground_, c16 background_) : symbol(' '), foreground(get_foreground_basic_color()), background(get_background_basic_color())
 	{
 
 	}
@@ -146,6 +146,10 @@ public:
 		foreground = foreground_;
 		background = background_;
 	}
+	pair<size_t, size_t> get_size()
+	{
+		return make_pair((size_t)1, (size_t)1);
+	}
 	friend istream& operator>>(istream& in, Console_Pixel_16& pixel)
 	{
 		in >> noskipws;
@@ -166,7 +170,7 @@ class Pixel
 {
 public:
 	T pixel;
-	Pixel() : pixel(' ', get_foreground_bassic_color(), get_background_bassic_color())
+	Pixel() : pixel(' ', get_foreground_basic_color(), get_background_basic_color())
 	{
 		
 	}
@@ -178,6 +182,12 @@ public:
 	{
 		pixel.draw();
 		pixel.draw();
+	}
+	pair<size_t, size_t> get_size()
+	{
+		pair<size_t, size_t> answer(pixel.get_size());
+		answer.first *= 2;
+		return answer;
 	}
 	friend istream& operator>>(istream& in, Pixel& pixel)
 	{
@@ -339,21 +349,22 @@ public:
 		build_file();
 		build_pixel_table();
 	}
-	void seg_draw(position pic_pos, window4 cur_pos)
+	void seg_draw(position pic_pos, window4 cur_pos)//some problems with size!!!!
 	{
 		check_picture_position(pic_pos);
 		cur_pos.screen_check();
 		check_picture_position({ pic_pos.x + cur_pos.x2 - cur_pos.x1, pic_pos.y + cur_pos.y2 - cur_pos.y1 });
 		set_cursor_pos(cur_pos.x1, cur_pos.y1);
-		for (size_t y = pic_pos.y; y + cur_pos.y1 <= cur_pos.y2; ++y)
+		//y is position in picture
+		for (size_t y = pic_pos.y; (y - pic_pos.y) + cur_pos.y1 <= cur_pos.y2; ++y)
 		{
-			for (size_t x = pic_pos.x; x + cur_pos.x1 <= cur_pos.x2; ++x)
+			for (size_t x = pic_pos.x; (x - pic_pos.x) + cur_pos.x1 <= cur_pos.x2; ++x)
 			{
 				pixel_table[x][y]->draw();
 			}
-			if (y + cur_pos.y1 + 1 <= cur_pos.y2)
+			if ((y - pic_pos.y) + cur_pos.y1 + 1 <= cur_pos.y2)
 			{
-				set_cursor_pos(cur_pos.x1, cur_pos.y1 + y + 1);
+				set_cursor_pos(cur_pos.x1, (y - pic_pos.y) + cur_pos.y1 + 1);
 			}
 		}
 	}
