@@ -25,6 +25,10 @@ public:
 struct position
 {
 	size_t x, y;
+	position() : x(0), y(0)
+	{
+
+	}
 	position(size_t x_, size_t y_) : x(x_), y(y_)
 	{
 
@@ -85,7 +89,7 @@ public:
 		x2 = *(list.begin() + 2);
 		y2 = *(list.begin() + 3);
 	}
-	void screen_check()
+	void screen_check() const
 	{
 		check_position(x1, y1);
 		check_position(x2, y2);
@@ -146,7 +150,7 @@ public:
 		foreground = foreground_;
 		background = background_;
 	}
-	pair<size_t, size_t> get_size()
+	static pair<size_t, size_t> get_size()
 	{
 		return make_pair((size_t)1, (size_t)1);
 	}
@@ -183,9 +187,9 @@ public:
 		pixel.draw();
 		pixel.draw();
 	}
-	pair<size_t, size_t> get_size()
+	static pair<size_t, size_t> get_size()
 	{
-		pair<size_t, size_t> answer(pixel.get_size());
+		pair<size_t, size_t> answer(T::get_size());
 		answer.first *= 2;
 		return answer;
 	}
@@ -214,6 +218,7 @@ private:
 	const string end_name = ".pic";
 	uint32_t size_x = 80;
 	uint32_t size_y = 25;
+	position pixel_size;
 	T* pixel_table[100][100];
 	//
 	class Picture_Exception : public exception
@@ -252,7 +257,7 @@ private:
 			}
 		}
 	}
-	void upload()
+	void upload() const
 	{
 		ofstream out(get_file_name());
 		out.write(reinterpret_cast<const char*>(&size_x), sizeof(size_x));
@@ -267,14 +272,14 @@ private:
 		out.close();
 		return;
 	}
-	bool exist()
+	bool exist() const
 	{
 		ifstream in(get_file_name());
 		bool answer = in.is_open();
 		in.close();
 		return answer;
 	}
-	void build_file()
+	void build_file() const
 	{
 		ofstream out(get_file_name());
 		out.close();
@@ -309,8 +314,12 @@ private:
 		}
 		picture_name = new_picture_name;
 	}
+	void update_pixel_size()
+	{
+		pixel_size = (position) T::get_size();
+	}
 	//
-	void check_picture_position(position pic_pos)
+	void check_picture_position(position pic_pos) const
 	{
 		if (pic_pos.x < 0 || size_x <= pic_pos.x)
 		{
@@ -335,6 +344,7 @@ private:
 public:
 	Picture(string name_) : picture_name(name_)
 	{
+		update_pixel_size();
 		update_path();
 		if (!exist())
 		{
@@ -345,38 +355,43 @@ public:
 	}
 	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
 	{
+		update_pixel_size();
 		update_path();
 		build_file();
 		build_pixel_table();
 	}
-	void seg_draw(position pic_pos, window4 cur_pos)//some problems with size!!!!
+	void seg_draw(position pic_pos, window4 cur_pos) const
 	{
 		check_picture_position(pic_pos);
 		cur_pos.screen_check();
-		check_picture_position({ pic_pos.x + cur_pos.x2 - cur_pos.x1, pic_pos.y + cur_pos.y2 - cur_pos.y1 });
+		check_picture_position({ pic_pos.x + (cur_pos.x2 - cur_pos.x1) / pixel_size.x, pic_pos.y + (cur_pos.y2 - cur_pos.y1) / pixel_size.y });
 		set_cursor_pos(cur_pos.x1, cur_pos.y1);
 		//y is position in picture
-		for (size_t y = pic_pos.y; (y - pic_pos.y) + cur_pos.y1 <= cur_pos.y2; ++y)
+		for (size_t y = pic_pos.y; (y - pic_pos.y) * pixel_size.y + cur_pos.y1 <= cur_pos.y2; ++y)
 		{
-			for (size_t x = pic_pos.x; (x - pic_pos.x) + cur_pos.x1 <= cur_pos.x2; ++x)
+			for (size_t x = pic_pos.x; (x - pic_pos.x) * pixel_size.x + cur_pos.x1 <= cur_pos.x2; ++x)
 			{
 				pixel_table[x][y]->draw();
 			}
-			if ((y - pic_pos.y) + cur_pos.y1 + 1 <= cur_pos.y2)
+			size_t next_position_in_console_y = (y - pic_pos.y + 1) * pixel_size.y + cur_pos.y1;
+			if (next_position_in_console_y <= cur_pos.y2)
 			{
-				set_cursor_pos(cur_pos.x1, (y - pic_pos.y) + cur_pos.y1 + 1);
+				set_cursor_pos(cur_pos.x1, next_position_in_console_y);
 			}
 		}
 	}
-	void draw_from(position pic_pos)
+	void draw_from(position pic_pos) const
 	{
-
+		position cur_pos(get_cursor_pos());
+		position sec_cur_pos(cur_pos.x + (size_x - pic_pos.x) * pixel_size.x - 1, cur_pos.y + (size_y - pic_pos.y) * pixel_size.y - 1);
+		window4 window(cur_pos, sec_cur_pos);
+		seg_draw(pic_pos, window);
 	}
-	void draw(position cur_pos)
+	void draw(position cur_pos) const
 	{
-		seg_draw(position(0, 0), window4(cur_pos, position(cur_pos.x + size_x - 1, cur_pos.y + size_y - 1)));
+		seg_draw(position(0, 0), window4(cur_pos, position(cur_pos.x + size_x * pixel_size.x - 1, cur_pos.y + size_y * pixel_size.y - 1)));
 	}
-	void draw()
+	void draw() const
 	{
 		draw((position)get_cursor_pos());
 	}

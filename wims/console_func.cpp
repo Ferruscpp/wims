@@ -406,7 +406,7 @@ pair<size_t, size_t> get_cursor_pos()
 					}
 					if (is_ok)
 					{
-						return make_pair(x - 1, y - 1);
+						return make_pair(y - 1, x - 1);
 					}
 				}
 			}
