@@ -272,7 +272,6 @@ private:
 			return message.c_str();
 		}
 	};
-
 	//
 	string get_file_name() const
 	{
@@ -321,16 +320,6 @@ private:
 	{
 		ofstream out(get_file_name());
 		out.close();
-	}
-	void remove()
-	{
-		if (exist())
-		{
-			if (std::remove(get_file_name().c_str()) != 0)
-			{
-				throw Cant_Remove_File();
-			}
-		}
 	}
 	//
 	void update_path()
@@ -480,6 +469,24 @@ public:
 		return *(pixel_table[pic_pos.x][pic_pos.y]);
 	}
 	//
+	void remove()
+	{
+		if (exist())
+		{
+			if (std::remove(get_file_name().c_str()) != 0)
+			{
+				throw Cant_Remove_File();
+			}
+		}
+	}
+	string get_name() const
+	{
+		return picture_name;
+	}
+	string get_folder() const
+	{
+		return folder_name;
+	}
 	void rename(string new_name)
 	{
 		for (size_t i = 0; i < new_name.size(); i++)
