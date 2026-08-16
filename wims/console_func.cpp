@@ -214,6 +214,19 @@ void wait(size_t milliseconds)
 {
 	Sleep(milliseconds);
 }
+//create_folder
+void create_folders(string folder)
+{
+	for (size_t i = 0; i < folder.size(); i++)
+	{
+		if (folder[i] == '/')
+		{
+			folder[i] = '\\';
+		}
+	}
+	//string folder_ = '\"' + folder_ + '\"';
+	system(("mkdir " + folder + " 2>nul").c_str());
+}
 //clear_inbuffer
 void clear_in_buffer()
 {
@@ -300,6 +313,12 @@ bool is_hit_()
 void wait(int milliseconds)
 {
 	usleep(milliseconds * 1000);
+}
+//create_folder
+void create_folders(string folder)
+{
+	string folder_ = '\'' + folder + '\'';
+	system(("mkdir -p " + folder).c_str());
 }
 //clear_in_buffer
 void clear_in_buffer()

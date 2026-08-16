@@ -14,8 +14,9 @@ int main()
 	clear_in_buffer();
 	try
 	{
-		bool build;
-		Picture<Pixel<Console_Pixel_16>> a("Second_picture"); build = false;
+		bool build, move = true;
+		//Picture<Pixel<Console_Pixel_16>> a("Second_picture"); build = false;
+		Picture<Pixel<Console_Pixel_16>> a("Try_new_func", 5, 8); build = true;
 		//Picture<Pixel<Console_Pixel_16>> a("Second_picture", 5, 8); build = true;
 		if (build)
 		{
@@ -54,6 +55,12 @@ int main()
 		set_cursor_pos(50, 6);
 		//a.expanded_draw(position(69, 25));
 		a.expanded_draw({ 0, 0 }, { 50, 6, 69, 25 });
+		//
+		if (move)
+		{
+			//a.rename("Try_new_func");
+			a.change_folder("./Pictures/New_folder");
+		}
 		a.~Picture();
 	}
 	catch (exception &ex)

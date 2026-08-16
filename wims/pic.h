@@ -2,16 +2,17 @@
 
 #include <iostream>
 #include <fstream>
+#include <conio.h>
 #include "console_func.h"
 using namespace std;
 
 
-class File_not_found_exception : public exception
+class File_Not_Found_Exception : public exception
 {
 private:
 	string massage = "Error: file not found!!!";
 public:
-	File_not_found_exception()
+	File_Not_Found_Exception()
 	{
 
 	}
@@ -21,6 +22,23 @@ public:
 		return massage.c_str();
 	}
 };
+
+class Cant_Remove_File : public exception
+{
+private:
+	string massage = "Error: can't remove file!!!";
+public:
+	Cant_Remove_File()
+	{
+
+	}
+
+	const char* what() const noexcept override
+	{
+		return massage.c_str();
+	}
+};
+
 
 struct position
 {
@@ -224,7 +242,7 @@ private:
 	uint32_t size_x = 80;
 	uint32_t size_y = 25;
 	position pixel_size;
-	T* pixel_table[100][100];
+	T* pixel_table[300][300];
 	//
 	class Picture_Exception : public exception
 	{
@@ -240,6 +258,21 @@ private:
 			return message.c_str();
 		}
 	};
+	class File_Name_Exception : public exception
+	{
+	private:
+		string message = "Error: wrong file name or folder path!!!";
+	public:
+		File_Name_Exception()
+		{
+
+		}
+		const char* what() const noexcept override
+		{
+			return message.c_str();
+		}
+	};
+
 	//
 	string get_file_name() const
 	{
@@ -250,7 +283,7 @@ private:
 		ifstream in(get_file_name());
 		if (!in.is_open())
 		{
-			throw File_not_found_exception();
+			throw File_Not_Found_Exception();
 		}
 		in.read(reinterpret_cast<char*>(&size_x), sizeof(size_x));
 		in.read(reinterpret_cast<char*>(&size_y), sizeof(size_y));
@@ -288,6 +321,16 @@ private:
 	{
 		ofstream out(get_file_name());
 		out.close();
+	}
+	void remove()
+	{
+		if (exist())
+		{
+			if (std::remove(get_file_name().c_str()) != 0)
+			{
+				throw Cant_Remove_File();
+			}
+		}
 	}
 	//
 	void update_path()
@@ -353,7 +396,7 @@ public:
 		update_path();
 		if (!exist())
 		{
-			throw File_not_found_exception();
+			throw File_Not_Found_Exception();
 		}
 		build_pixel_table();
 		dounload();
@@ -365,7 +408,7 @@ public:
 		build_file();
 		build_pixel_table();
 	}
-
+	//
 	void seg_draw(position pic_pos, window4 cur_pos) const
 	{
 		check_picture_position(pic_pos);
@@ -401,7 +444,7 @@ public:
 	{
 		draw((position)get_cursor_pos());
 	}
-
+	//
 	void expanded_draw(position pic_pos, window4 cur_pos) const
 	{
 		cur_pos.screen_check();
@@ -430,19 +473,34 @@ public:
 		window4 cur_pos((position) get_cursor_pos(), right_down_angle);
 		expanded_draw(cur_pos);
 	}
+	//
 	T& get_pixel(position pic_pos)
 	{
 		check_picture_position(pic_pos);
 		return *(pixel_table[pic_pos.x][pic_pos.y]);
 	}
+	//
 	void rename(string new_name)
 	{
-
+		for (size_t i = 0; i < new_name.size(); i++)
+		{
+			if (new_name[i] == '/')
+			{
+				throw File_Name_Exception();
+			}
+		}
+		remove();
+		picture_name = new_name;
+		upload();
 	}
 	void change_folder(string new_folder)
 	{
-
+		create_folders(new_folder);
+		remove();
+		folder_name = new_folder;
+		upload();
 	}
+	//
 	~Picture()
 	{
 		upload();
