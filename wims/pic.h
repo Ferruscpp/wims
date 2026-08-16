@@ -42,12 +42,16 @@ public:
 
 struct position
 {
-	size_t x, y;
+	uint32_t x, y;
 	position() : x(0), y(0)
 	{
 
 	}
 	position(size_t x_, size_t y_) : x(x_), y(y_)
+	{
+
+	}
+	position(uint32_t x_, uint32_t y_) : x(x_), y(y_)
 	{
 
 	}
@@ -60,6 +64,20 @@ struct position
 		x = x_;
 		y = y_;
 	}
+	//
+	friend istream& operator>>(istream& in, position& pos)
+	{
+		in.read(reinterpret_cast<char*>(&pos.x), sizeof(pos.x));
+		in.read(reinterpret_cast<char*>(&pos.y), sizeof(pos.y));
+		return in;
+	}
+	friend ofstream& operator<<(ofstream& out, const position& pos)
+	{
+		out.write(reinterpret_cast<const char*>(&pos.x), sizeof(pos.x));
+		out.write(reinterpret_cast<const char*>(&pos.y), sizeof(pos.y));
+		return out;
+	}
+	//
 	explicit position(pair<size_t, size_t> pos) : x(pos.first), y(pos.second)
 	{
 
@@ -72,7 +90,7 @@ struct position
 
 struct window4
 {
-	size_t x1, y1, x2, y2;
+	uint32_t x1, y1, x2, y2;
 private:
 	class Window_Exception : exception
 	{
@@ -101,17 +119,39 @@ public:
 	{
 		check_window4();
 	}
+	window4(uint32_t x1_, uint32_t y1_, uint32_t x2_, uint32_t y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
+	{
+		check_window4();
+	}
 	window4(position left_up_angle, position right_down_angle) : x1(left_up_angle.x), y1(left_up_angle.y), x2(right_down_angle.x), y2(right_down_angle.y)
 	{
 		check_window4();
 	}
-	window4(initializer_list<size_t> list)
+	window4(initializer_list<uint32_t> list)
 	{
 		x1 = *list.begin();
 		y1 = *(list.begin() + 1);
 		x2 = *(list.begin() + 2);
 		y2 = *(list.begin() + 3);
 	}
+	//
+	friend istream& operator>>(istream& in, window4& window)
+	{
+		in.read(reinterpret_cast<char*>(&window.x1), sizeof(window.x1));
+		in.read(reinterpret_cast<char*>(&window.y1), sizeof(window.y1));
+		in.read(reinterpret_cast<char*>(&window.x2), sizeof(window.x2));
+		in.read(reinterpret_cast<char*>(&window.y2), sizeof(window.y2));		
+		return in;
+	}
+	friend ofstream& operator<<(ofstream& out, const window4& window)
+	{
+		out.write(reinterpret_cast<const char*>(&window.x1), sizeof(window.x1));
+		out.write(reinterpret_cast<const char*>(&window.y1), sizeof(window.y1));
+		out.write(reinterpret_cast<const char*>(&window.x2), sizeof(window.x2));
+		out.write(reinterpret_cast<const char*>(&window.y2), sizeof(window.y2));
+		return out;
+	}
+	//
 	void screen_check() const
 	{
 		check_position(x1, y1);
@@ -232,6 +272,64 @@ public:
 	}
 };
 
+class File_Name_Exception : public exception
+{
+private:
+	string message = "Error: wrong file name or folder path!!!";
+public:
+	File_Name_Exception()
+	{
+
+	}
+	const char* what() const noexcept override
+	{
+		return message.c_str();
+	}
+};
+
+void update_path(string& folder, string& name)
+{
+	int seporator_position = -1;
+	string new_picture_name;
+	for (int i = name.size() - 1; i >= 0; --i)
+	{
+		if (name[i] == '/')
+		{
+			seporator_position = i;
+			break;
+		}
+	}
+	if (seporator_position > 0)
+	{
+		folder += '/';
+	}
+	for (int i = 0; i < name.size(); ++i)
+	{
+		if (i < seporator_position)
+		{
+			name += name[i];
+		}
+		else if (seporator_position < i)
+		{
+			new_picture_name += name[i];
+		}
+	}
+	name = new_picture_name;
+}
+
+bool exist(string file_name)
+{
+	ifstream in(file_name);
+	bool answer = in.is_open();
+	in.close();
+	return answer;
+}
+void build_file(string file_name)
+{
+	ofstream out(file_name);
+	out.close();
+}
+
 template<typename T>
 class Picture
 {
@@ -258,25 +356,7 @@ private:
 			return message.c_str();
 		}
 	};
-	class File_Name_Exception : public exception
-	{
-	private:
-		string message = "Error: wrong file name or folder path!!!";
-	public:
-		File_Name_Exception()
-		{
-
-		}
-		const char* what() const noexcept override
-		{
-			return message.c_str();
-		}
-	};
 	//
-	string get_file_name() const
-	{
-		return folder_name + '/' + picture_name + end_name;
-	}
 	void dounload()
 	{
 		ifstream in(get_file_name());
@@ -293,6 +373,7 @@ private:
 				in >> *pixel_table[x][y];
 			}
 		}
+		in.close();
 	}
 	void upload() const
 	{
@@ -309,48 +390,7 @@ private:
 		out.close();
 		return;
 	}
-	bool exist() const
-	{
-		ifstream in(get_file_name());
-		bool answer = in.is_open();
-		in.close();
-		return answer;
-	}
-	void build_file() const
-	{
-		ofstream out(get_file_name());
-		out.close();
-	}
 	//
-	void update_path()
-	{
-		int seporator_position = -1;
-		string new_picture_name;
-		for (int i = picture_name.size() - 1; i >= 0; --i)
-		{
-			if (picture_name[i] == '/')
-			{
-				seporator_position = i;
-				break;
-			}
-		}
-		if (seporator_position > 0)
-		{
-			folder_name += '/';
-		}
-		for (int i = 0; i < picture_name.size(); ++i)
-		{
-			if (i < seporator_position)
-			{
-				folder_name += picture_name[i];
-			}
-			else if (seporator_position < i)
-			{
-				new_picture_name += picture_name[i];
-			}
-		}
-		picture_name = new_picture_name;
-	}
 	void update_pixel_size()
 	{
 		pixel_size = (position) T::get_size();
@@ -382,8 +422,8 @@ public:
 	Picture(string name_) : picture_name(name_)
 	{
 		update_pixel_size();
-		update_path();
-		if (!exist())
+		update_path(folder_name, picture_name);
+		if (!exist(get_file_name()))
 		{
 			throw File_Not_Found_Exception();
 		}
@@ -393,8 +433,8 @@ public:
 	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
 	{
 		update_pixel_size();
-		update_path();
-		build_file();
+		update_path(folder_name, picture_name);
+		build_file(get_file_name());
 		build_pixel_table();
 	}
 	//
@@ -469,9 +509,13 @@ public:
 		return *(pixel_table[pic_pos.x][pic_pos.y]);
 	}
 	//
+	string get_file_name() const
+	{
+		return folder_name + '/' + picture_name + end_name;
+	}
 	void remove()
 	{
-		if (exist())
+		if (exist(get_file_name()))
 		{
 			if (std::remove(get_file_name().c_str()) != 0)
 			{
@@ -526,15 +570,51 @@ class Roll
 {
 private:
 	Picture<T> picture;
-	size_t delay;//in milliseconds
+	uint32_t delay;//in milliseconds
 	position pic_pos;
 	window4 cur_pos;
 	//
-
-public:
-	Roll(string picture_name, size_t delay_) : picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	string folder_name = "./Pictures";
+	string roll_name;
+	const string end_name = ".pic";
+	//
+	string get_file_name() const
 	{
-		
+		return folder_name + '/' + roll_name + end_name;
+	}
+	void dounload()
+	{
+		ifstream in(get_file_name());
+		if (!in.is_open())
+		{
+			throw File_Not_Found_Exception();
+		}
+		in.read(reinterpret_cast<*char>(&delay), sizeof(delay));
+		in >> pic_pos >> cur_pos;
+		in >> picture.get_file_name();
+		in.close();
+	}
+	void upload() const
+	{
+		ofstream out(get_file_name());
+		out.write(reinterpret_cast<const char*>(&delay), sizeof(delay));
+		out << pic_pos << cur_pos;
+		string picture_name;
+		getline(in, picture_name);
+		out.close();
+		return;
+	}
+public:
+	Roll(string picture_name, uint32_t delay_) : picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	{
+		roll_name(picture.get_name());
+		update_path(folder_name, roll_name);
+
+	}
+	Roll(string roll_name_, string picture_name, size_t delay_) : roll_name(roll_name), picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	{
+		update_path(folder_name, roll_name);
+
 	}
 	//
 	void set_delay(size_t new_delay)
@@ -556,7 +636,7 @@ public:
 	}
 	position& get_pic_pos() const
 	{
-		return pic_pos();
+		return pic_pos;
 	}
 	window4& get_pic_pos() const
 	{
