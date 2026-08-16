@@ -520,3 +520,51 @@ public:
 		}
 	}
 };
+
+template<typename T>
+class Roll
+{
+private:
+	Picture<T> picture;
+	size_t delay;//in milliseconds
+	position pic_pos;
+	window4 cur_pos;
+	//
+
+public:
+	Roll(string picture_name, size_t delay_) : picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	{
+		
+	}
+	//
+	void set_delay(size_t new_delay)
+	{
+		delay = new_delay;
+	}
+	void set_pic_pos(position new_pic_pos)
+	{
+		pic_pos = new_pic_pos;
+	}
+	void set_cur_pos(window4 new_cur_pos)
+	{
+		cur_pos = new_cur_pos;
+	}
+	//
+	size_t& get_delay() const
+	{
+		return delay;
+	}
+	position& get_pic_pos() const
+	{
+		return pic_pos();
+	}
+	window4& get_pic_pos() const
+	{
+		return cur_pos;
+	}
+	//
+	~Roll()
+	{
+		picture.~Picture();
+	}
+};
