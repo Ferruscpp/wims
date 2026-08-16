@@ -33,9 +33,14 @@ struct position
 	{
 
 	}
-	position(int x_, int y_) : x(x_), y(y_)
+	position(int x_, int y_) 
 	{
-
+		if (x_ < 0 || y_ < 0)
+		{
+			clog << "Warning: x or y is negative number!" << endl;
+		}
+		x = x_;
+		y = y_;
 	}
 	explicit position(pair<size_t, size_t> pos) : x(pos.first), y(pos.second)
 	{
@@ -224,7 +229,7 @@ private:
 	class Picture_Exception : public exception
 	{
 	private:
-		string message = "Exite out of picture range!!!";
+		string message = "Error: exite out of picture range!!!";
 	public:
 		Picture_Exception()
 		{
@@ -360,6 +365,7 @@ public:
 		build_file();
 		build_pixel_table();
 	}
+
 	void seg_draw(position pic_pos, window4 cur_pos) const
 	{
 		check_picture_position(pic_pos);
@@ -394,6 +400,35 @@ public:
 	void draw() const
 	{
 		draw((position)get_cursor_pos());
+	}
+
+	void expanded_draw(position pic_pos, window4 cur_pos) const
+	{
+		cur_pos.screen_check();
+		set_cursor_pos(cur_pos.x1, cur_pos.y1);
+		pic_pos.x %= size_x;
+		pic_pos.y %= size_y;
+		for (size_t y = pic_pos.y, pos_y = cur_pos.y1; pos_y <= cur_pos.y2; y = (y + 1) % size_y, pos_y += pixel_size.y)
+		{
+			for (size_t x = pic_pos.x, pos_x = cur_pos.x1; pos_x <= cur_pos.x2; x = (x + 1) % size_x, pos_x += pixel_size.x)
+			{
+				pixel_table[x][y]->draw();
+			}
+			size_t next_position_in_console_y = pos_y + pixel_size.y;
+			if (next_position_in_console_y <= cur_pos.y2)
+			{
+				set_cursor_pos(cur_pos.x1, next_position_in_console_y);
+			}
+		}
+	}
+	void expanded_draw(window4 cur_pos) const
+	{
+		expanded_draw({ 0, 0 }, cur_pos);
+	}
+	void expanded_draw(position right_down_angle) const
+	{
+		window4 cur_pos((position) get_cursor_pos(), right_down_angle);
+		expanded_draw(cur_pos);
 	}
 	T& get_pixel(position pic_pos)
 	{

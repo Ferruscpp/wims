@@ -51,6 +51,9 @@ int main()
 		a.draw_from(pic_pos);
 		set_cursor_pos(7, 10);
 		a.draw();
+		set_cursor_pos(50, 6);
+		//a.expanded_draw(position(69, 25));
+		a.expanded_draw({ 0, 0 }, { 50, 6, 69, 25 });
 		a.~Picture();
 	}
 	catch (exception &ex)

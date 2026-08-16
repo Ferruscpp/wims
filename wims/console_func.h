@@ -151,7 +151,7 @@ void end_of_work_console_func();
 class Screen_Exception : public exception
 {
 private:
-	string massage = "Exite out of screen!!!";
+	string massage = "Error: exite out of screen!!!";
 public:
 	Screen_Exception();
 	const char* what() const noexcept override;
@@ -160,7 +160,7 @@ public:
 class ANSI_Doesnt_Supported_Exception : public exception
 {
 private:
-	string massage = "ANSI doesn't supported in this console!!!";
+	string massage = "Error: ANSI doesn't supported in this console!!!";
 public:
 	ANSI_Doesnt_Supported_Exception();
 	const char* what() const noexcept override;
@@ -190,7 +190,7 @@ void switch_to_small_screen();
 class Color_Exception : public exception
 {
 private:
-	string massage = "Error with color convertation!!!";
+	string massage = "Error: color convertation error!!!";
 public:
 	Color_Exception();
 	const char* what() const noexcept override;
