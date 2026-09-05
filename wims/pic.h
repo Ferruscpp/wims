@@ -6,6 +6,14 @@
 #include "console_func.h"
 using namespace std;
 
+void scan_raw(istream& in, uint32_t& value)
+{
+	in.read(reinterpret_cast<char*>(&value), sizeof(value));
+}
+void print_raw(ostream& out, const uint32_t& value)
+{
+	out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+}
 
 class File_Not_Found_Exception : public exception
 {
@@ -67,14 +75,14 @@ struct position
 	//
 	friend istream& operator>>(istream& in, position& pos)
 	{
-		in.read(reinterpret_cast<char*>(&pos.x), sizeof(pos.x));
-		in.read(reinterpret_cast<char*>(&pos.y), sizeof(pos.y));
+		scan_raw(in, pos.x);
+		scan_raw(in, pos.y);
 		return in;
 	}
 	friend ofstream& operator<<(ofstream& out, const position& pos)
 	{
-		out.write(reinterpret_cast<const char*>(&pos.x), sizeof(pos.x));
-		out.write(reinterpret_cast<const char*>(&pos.y), sizeof(pos.y));
+		print_raw(out, pos.x);
+		print_raw(out, pos.y);
 		return out;
 	}
 	//
@@ -137,18 +145,18 @@ public:
 	//
 	friend istream& operator>>(istream& in, window4& window)
 	{
-		in.read(reinterpret_cast<char*>(&window.x1), sizeof(window.x1));
-		in.read(reinterpret_cast<char*>(&window.y1), sizeof(window.y1));
-		in.read(reinterpret_cast<char*>(&window.x2), sizeof(window.x2));
-		in.read(reinterpret_cast<char*>(&window.y2), sizeof(window.y2));		
+		scan_raw(in, window.x1);
+		scan_raw(in, window.y1);
+		scan_raw(in, window.x2);
+		scan_raw(in, window.y2);
 		return in;
 	}
 	friend ofstream& operator<<(ofstream& out, const window4& window)
 	{
-		out.write(reinterpret_cast<const char*>(&window.x1), sizeof(window.x1));
-		out.write(reinterpret_cast<const char*>(&window.y1), sizeof(window.y1));
-		out.write(reinterpret_cast<const char*>(&window.x2), sizeof(window.x2));
-		out.write(reinterpret_cast<const char*>(&window.y2), sizeof(window.y2));
+		print_raw(out, window.x1);
+		print_raw(out, window.y1);
+		print_raw(out, window.x2);
+		print_raw(out, window.y2);
 		return out;
 	}
 	//
@@ -287,13 +295,15 @@ public:
 	}
 };
 
-void update_path(string& folder, string& name)
+//functions for files
+template<typename O>
+void update_path(O& object)
 {
 	int seporator_position = -1;
 	string new_picture_name;
-	for (int i = name.size() - 1; i >= 0; --i)
+	for (int i = object.name.size() - 1; i >= 0; --i)
 	{
-		if (name[i] == '/')
+		if (object.name[i] == '/')
 		{
 			seporator_position = i;
 			break;
@@ -301,41 +311,48 @@ void update_path(string& folder, string& name)
 	}
 	if (seporator_position > 0)
 	{
-		folder += '/';
+		object.folder_name += '/';
 	}
-	for (int i = 0; i < name.size(); ++i)
+	for (int i = 0; i < object.name.size(); ++i)
 	{
 		if (i < seporator_position)
 		{
-			name += name[i];
+			object.folder_name += object.name[i];
 		}
 		else if (seporator_position < i)
 		{
-			new_picture_name += name[i];
+			new_picture_name += object.name[i];
 		}
 	}
-	name = new_picture_name;
+	object.name = new_picture_name;
 }
-
-bool exist(string file_name)
+template<typename O>
+string get_file_name(O& object)
 {
-	ifstream in(file_name);
+	return object.folder_name + '/' + object.name + object.end_name;
+}
+template<typename O>
+bool exist(O& object)
+{
+	ifstream in(get_file_name(object));
 	bool answer = in.is_open();
 	in.close();
 	return answer;
 }
-void build_file(string file_name)
+template<typename O>
+void build_file(O& object)
 {
-	ofstream out(file_name);
+	ofstream out(get_file_name(object));
 	out.close();
 }
+//
 
 template<typename T>
 class Picture
 {
 private:
 	string folder_name = "./Pictures";
-	string picture_name;
+	string name;
 	const string end_name = ".pic";
 	uint32_t size_x = 80;
 	uint32_t size_y = 25;
@@ -357,39 +374,10 @@ private:
 		}
 	};
 	//
-	void dounload()
-	{
-		ifstream in(get_file_name());
-		if (!in.is_open())
-		{
-			throw File_Not_Found_Exception();
-		}
-		in.read(reinterpret_cast<char*>(&size_x), sizeof(size_x));
-		in.read(reinterpret_cast<char*>(&size_y), sizeof(size_y));
-		for (size_t y = 0; y < size_y; ++y)
-		{
-			for (size_t x = 0; x < size_x; ++x)
-			{
-				in >> *pixel_table[x][y];
-			}
-		}
-		in.close();
-	}
-	void upload() const
-	{
-		ofstream out(get_file_name());
-		out.write(reinterpret_cast<const char*>(&size_x), sizeof(size_x));
-		out.write(reinterpret_cast<const char*>(&size_y), sizeof(size_y));
-		for (size_t y = 0; y < size_y; ++y)
-		{
-			for (size_t x = 0; x < size_x; ++x)
-			{
-				out << *pixel_table[x][y];
-			}
-		}
-		out.close();
-		return;
-	}
+	template<typename O> friend void update_path(O& object);
+	template<typename O> friend string get_file_name(O& object);
+	template<typename O> friend bool exist(O& object);
+	template<typename O> friend void build_file(O& object);
 	//
 	void update_pixel_size()
 	{
@@ -419,22 +407,22 @@ private:
 		}
 	}
 public:
-	Picture(string name_) : picture_name(name_)
+	Picture(string name_) : name(name_)
 	{
 		update_pixel_size();
-		update_path(folder_name, picture_name);
-		if (!exist(get_file_name()))
+		update_path(*this);
+		if (!exist(*this))
 		{
 			throw File_Not_Found_Exception();
 		}
 		build_pixel_table();
 		dounload();
 	}
-	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), picture_name(new_name)
+	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), name(new_name)
 	{
 		update_pixel_size();
-		update_path(folder_name, picture_name);
-		build_file(get_file_name());
+		update_path(*this);
+		build_file(*this);
 		build_pixel_table();
 	}
 	//
@@ -509,15 +497,44 @@ public:
 		return *(pixel_table[pic_pos.x][pic_pos.y]);
 	}
 	//
-	string get_file_name() const
+	void dounload()
 	{
-		return folder_name + '/' + picture_name + end_name;
+		ifstream in(get_file_name(*this));
+		if (!in.is_open())
+		{
+			throw File_Not_Found_Exception();
+		}
+		in.read(reinterpret_cast<char*>(&size_x), sizeof(size_x));
+		in.read(reinterpret_cast<char*>(&size_y), sizeof(size_y));
+		for (size_t y = 0; y < size_y; ++y)
+		{
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				in >> *pixel_table[x][y];
+			}
+		}
+		in.close();
+	}
+	void upload() const
+	{
+		ofstream out(get_file_name(*this));
+		out.write(reinterpret_cast<const char*>(&size_x), sizeof(size_x));
+		out.write(reinterpret_cast<const char*>(&size_y), sizeof(size_y));
+		for (size_t y = 0; y < size_y; ++y)
+		{
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				out << *pixel_table[x][y];
+			}
+		}
+		out.close();
+		return;
 	}
 	void remove()
 	{
-		if (exist(get_file_name()))
+		if (exist(*this))
 		{
-			if (std::remove(get_file_name().c_str()) != 0)
+			if (std::remove(get_file_name(*this).c_str()) != 0)
 			{
 				throw Cant_Remove_File();
 			}
@@ -525,7 +542,7 @@ public:
 	}
 	string get_name() const
 	{
-		return picture_name;
+		return name;
 	}
 	string get_folder() const
 	{
@@ -541,12 +558,12 @@ public:
 			}
 		}
 		remove();
-		picture_name = new_name;
+		name = new_name;
 		upload();
 	}
 	void change_folder(string new_folder)
 	{
-		create_folders(new_folder);
+		create_folder(new_folder);
 		remove();
 		folder_name = new_folder;
 		upload();
@@ -574,46 +591,51 @@ private:
 	position pic_pos;
 	window4 cur_pos;
 	//
-	string folder_name = "./Pictures";
-	string roll_name;
-	const string end_name = ".pic";
+	string folder_name = "./Roll";
+	string name;
+	const string end_name = ".roll";
 	//
-	string get_file_name() const
-	{
-		return folder_name + '/' + roll_name + end_name;
-	}
+	template<typename O> friend void update_path(O& object);
+	template<typename O> friend string get_file_name(O& object);
+	template<typename O> bool exist(O& object);
+	template<typename O> void build_file(O& object);
 	void dounload()
 	{
-		ifstream in(get_file_name());
+		ifstream in(get_file_name(*this));
 		if (!in.is_open())
 		{
 			throw File_Not_Found_Exception();
 		}
-		in.read(reinterpret_cast<*char>(&delay), sizeof(delay));
+		scan_raw(in, delay);
 		in >> pic_pos >> cur_pos;
-		in >> picture.get_file_name();
+		string path_to_picture;
+		getline(in, path_to_picture);
+		for (size_t i = 0; i < end_name.size(); ++i)
+		{
+			path_to_picture.pop_back();
+		}
+		
 		in.close();
 	}
 	void upload() const
 	{
-		ofstream out(get_file_name());
-		out.write(reinterpret_cast<const char*>(&delay), sizeof(delay));
+		ofstream out(get_file_name(*this));
+		print_raw(out, delay);
 		out << pic_pos << cur_pos;
-		string picture_name;
-		getline(in, picture_name);
+		out << get_file_name(picture);
 		out.close();
 		return;
 	}
 public:
 	Roll(string picture_name, uint32_t delay_) : picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
 	{
-		roll_name(picture.get_name());
-		update_path(folder_name, roll_name);
+		name = picture.get_name();
+		update_path(*this);
 
 	}
-	Roll(string roll_name_, string picture_name, size_t delay_) : roll_name(roll_name), picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	Roll(string name_, string picture_name, size_t delay_) : name(name), picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
 	{
-		update_path(folder_name, roll_name);
+		update_path(*this);
 
 	}
 	//
@@ -638,7 +660,7 @@ public:
 	{
 		return pic_pos;
 	}
-	window4& get_pic_pos() const
+	window4& get_cur_pos() const
 	{
 		return cur_pos;
 	}

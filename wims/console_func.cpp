@@ -215,7 +215,7 @@ void wait(size_t milliseconds)
 	Sleep(milliseconds);
 }
 //create_folder
-void create_folders(string folder)
+void create_folder(string folder)
 {
 	for (size_t i = 0; i < folder.size(); i++)
 	{
@@ -315,7 +315,7 @@ void wait(int milliseconds)
 	usleep(milliseconds * 1000);
 }
 //create_folder
-void create_folders(string folder)
+void create_folder(string folder)
 {
 	string folder_ = '\'' + folder + '\'';
 	system(("mkdir -p " + folder).c_str());
