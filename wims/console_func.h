@@ -61,6 +61,8 @@ public:
 
 	void switch_to_big();
 
+	pair<size_t, size_t> get_right_down_angle() const;
+
 	c16 get_foreground_basic_color() const;
 
 	c16 get_background_basic_color() const;
@@ -69,6 +71,8 @@ public:
 };
 
 void check_position(int x, int y);
+
+pair<size_t, size_t> get_right_down_angle();
 
 c16 get_foreground_basic_color();
 

@@ -129,6 +129,11 @@ void Screen_Controller::switch_to_big()
 	top_y = 51;
 }
 
+pair<size_t, size_t> Screen_Controller::get_right_down_angle() const
+{
+	return pair<size_t, size_t>(top_x, top_y);
+}
+
 c16 Screen_Controller::get_foreground_basic_color() const
 {
 	return foreground_basic;
@@ -152,6 +157,11 @@ void check_position(int x, int y)
 }
 
 Screen_Controller* sc_;
+
+pair<size_t, size_t> get_right_down_angle()
+{
+	return sc_->get_right_down_angle();
+}
 
 c16 get_foreground_basic_color()
 {

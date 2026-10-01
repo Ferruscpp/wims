@@ -66,11 +66,8 @@ public:
 
 struct position
 {
-	uint32_t x, y;
-	position() : x(0), y(0)
-	{
-
-	}
+	uint32_t x = 0, y = 0;
+	position() = default;
 	position(size_t x_, size_t y_) : x(x_), y(y_)
 	{
 
@@ -114,7 +111,7 @@ struct position
 
 struct window4
 {
-	uint32_t x1, y1, x2, y2;
+	uint32_t x1 = 0, y1 = 0, x2 = get_right_down_angle().first, y2 = get_right_down_angle().second;
 private:
 	class Window_Exception : exception
 	{
@@ -637,8 +634,9 @@ private:
 	uint32_t delay;//in milliseconds
 	position pic_pos;
 	window4 cur_pos;
+	uint32_t time;
 	//
-	string folder_name = "./Roll";
+	string folder_name = "./Rolls";
 	string name;
 	const string end_name = ".roll";
 	//
@@ -655,6 +653,7 @@ private:
 		}
 		scan_raw(in, delay);
 		in >> pic_pos >> cur_pos;
+		scan_raw(in, time);
 		string path_to_picture;
 		getline(in, path_to_picture);
 		if (picture == nullptr)
@@ -679,6 +678,7 @@ private:
 		ofstream out(get_file_name(*this));
 		print_raw(out, delay);
 		out << pic_pos << cur_pos;
+		print_raw(out, time);
 		out << get_file_name(*picture);
 		out.close();
 		return;
@@ -688,10 +688,15 @@ public:
 	{
 		download();
 	}
-	Roll(string name_, string picture_name, size_t delay_) : name(name_), picture(new T(picture_name)), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	Roll(string name_, string picture_name, uint32_t delay_, position pic_pos_, window4 cur_pos_, uint32_t time_)
+		: name(name_), picture(new T(picture_name)), delay(delay_), pic_pos(pic_pos_), cur_pos(cur_pos_), time(time_)
 	{
 		update_path(*this);
 		upload();
+	}
+	Roll(string name_, string picture_name, size_t delay_, size_t time_) : Roll(name_, picture_name, delay_, position(), window4(), time_)
+	{
+		
 	}
 	//
 	void set_delay(size_t new_delay)
@@ -706,6 +711,10 @@ public:
 	{
 		cur_pos = new_cur_pos;
 	}
+	void set_time(size_t new_time)
+	{
+		time = new_time;
+	}
 	//
 	size_t& get_delay() const
 	{
@@ -718,6 +727,10 @@ public:
 	window4& get_cur_pos() const
 	{
 		return cur_pos;
+	}
+	size_t& get_time() const
+	{
+		return time;
 	}
 	//
 	~Roll()

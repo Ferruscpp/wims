@@ -14,8 +14,8 @@ int main()
 	clear_in_buffer();
 	try
 	{
-		//Roll<Picture<Pixel<Console_Pixel_16>>> r("test_roll", "New_folder/Try_new_func", 5);
-		Roll<Picture<Pixel<Console_Pixel_16>>> r("test_roll");
+		Roll<Picture<Pixel<Console_Pixel_16>>> r("test_roll", "New_folder/Try_new_func", 5, 100);
+		//Roll<Picture<Pixel<Console_Pixel_16>>> r("test_roll");
 	}
 	catch (exception &ex)
 	{
