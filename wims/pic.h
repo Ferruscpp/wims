@@ -31,12 +31,28 @@ public:
 	}
 };
 
-class Cant_Remove_File : public exception
+class Cant_Remove_File_Exception : public exception
 {
 private:
 	string massage = "Error: can't remove file!!!";
 public:
-	Cant_Remove_File()
+	Cant_Remove_File_Exception()
+	{
+
+	}
+
+	const char* what() const noexcept override
+	{
+		return massage.c_str();
+	}
+};
+
+class Download_Exception : public exception
+{
+private:
+	string massage = "Error: can't download file!!!";
+public:
+	Download_Exception()
 	{
 
 	}
@@ -123,10 +139,7 @@ private:
 		}
 	}
 public:
-	window4(size_t x1_, size_t y1_, size_t x2_, size_t y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
-	{
-		check_window4();
-	}
+	window4() = default;
 	window4(uint32_t x1_, uint32_t y1_, uint32_t x2_, uint32_t y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
 	{
 		check_window4();
@@ -299,8 +312,41 @@ public:
 template<typename O>
 void update_path(O& object)
 {
+	//delete base folder
+	int base_folder_length = object.folder_name.size();
+	if (base_folder_length <= object.name.size())
+	{
+		bool is_need_to_delete = true;
+		for (int i = 0; i < base_folder_length; ++i)
+		{
+			if (object.name[i] != object.folder_name[i])
+			{
+				is_need_to_delete = false;
+				break;
+			}
+		}
+		if (is_need_to_delete)
+		{
+			object.name.erase(0, base_folder_length);
+		}
+	}
+	//delete extension
+	int last_position = object.name.size() - object.end_name.size();
+	if (0 <= last_position)
+	{
+		if (object.name[last_position] == '.')
+		{
+			object.name.erase(last_position, object.end_name.size());
+		}
+	}
+	//clean first '/'
+	if (object.name[0] == '/')
+	{
+		object.name.erase(0, 1);
+	}
+	//devide on folder and name
 	int seporator_position = -1;
-	string new_picture_name;
+	string new_name;
 	for (int i = object.name.size() - 1; i >= 0; --i)
 	{
 		if (object.name[i] == '/')
@@ -321,10 +367,10 @@ void update_path(O& object)
 		}
 		else if (seporator_position < i)
 		{
-			new_picture_name += object.name[i];
+			new_name += object.name[i];
 		}
 	}
-	object.name = new_picture_name;
+	object.name = new_name;
 }
 template<typename O>
 string get_file_name(O& object)
@@ -416,7 +462,7 @@ public:
 			throw File_Not_Found_Exception();
 		}
 		build_pixel_table();
-		dounload();
+		download();
 	}
 	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), name(new_name)
 	{
@@ -497,15 +543,15 @@ public:
 		return *(pixel_table[pic_pos.x][pic_pos.y]);
 	}
 	//
-	void dounload()
+	void download()
 	{
 		ifstream in(get_file_name(*this));
 		if (!in.is_open())
 		{
 			throw File_Not_Found_Exception();
 		}
-		in.read(reinterpret_cast<char*>(&size_x), sizeof(size_x));
-		in.read(reinterpret_cast<char*>(&size_y), sizeof(size_y));
+		scan_raw(in, size_x);
+		scan_raw(in, size_y);
 		for (size_t y = 0; y < size_y; ++y)
 		{
 			for (size_t x = 0; x < size_x; ++x)
@@ -518,8 +564,8 @@ public:
 	void upload() const
 	{
 		ofstream out(get_file_name(*this));
-		out.write(reinterpret_cast<const char*>(&size_x), sizeof(size_x));
-		out.write(reinterpret_cast<const char*>(&size_y), sizeof(size_y));
+		print_raw(out, size_x);
+		print_raw(out, size_y);
 		for (size_t y = 0; y < size_y; ++y)
 		{
 			for (size_t x = 0; x < size_x; ++x)
@@ -536,10 +582,11 @@ public:
 		{
 			if (std::remove(get_file_name(*this).c_str()) != 0)
 			{
-				throw Cant_Remove_File();
+				throw Cant_Remove_File_Exception();
 			}
 		}
 	}
+	//
 	string get_name() const
 	{
 		return name;
@@ -586,7 +633,7 @@ template<typename T>
 class Roll
 {
 private:
-	Picture<T> picture;
+	T* picture;
 	uint32_t delay;//in milliseconds
 	position pic_pos;
 	window4 cur_pos;
@@ -597,9 +644,9 @@ private:
 	//
 	template<typename O> friend void update_path(O& object);
 	template<typename O> friend string get_file_name(O& object);
-	template<typename O> bool exist(O& object);
-	template<typename O> void build_file(O& object);
-	void dounload()
+	template<typename O> friend bool exist(O& object);
+	template<typename O> friend void build_file(O& object);
+	void download()
 	{
 		ifstream in(get_file_name(*this));
 		if (!in.is_open())
@@ -610,11 +657,21 @@ private:
 		in >> pic_pos >> cur_pos;
 		string path_to_picture;
 		getline(in, path_to_picture);
-		for (size_t i = 0; i < end_name.size(); ++i)
+		if (picture == nullptr)
 		{
-			path_to_picture.pop_back();
+			picture = new T(path_to_picture);
 		}
-		
+		else
+		{
+			if (get_file_name(*picture) != path_to_picture)
+			{
+				throw Download_Exception();
+			}
+			else
+			{
+				picture->download();
+			}
+		}
 		in.close();
 	}
 	void upload() const
@@ -622,21 +679,19 @@ private:
 		ofstream out(get_file_name(*this));
 		print_raw(out, delay);
 		out << pic_pos << cur_pos;
-		out << get_file_name(picture);
+		out << get_file_name(*picture);
 		out.close();
 		return;
 	}
 public:
-	Roll(string picture_name, uint32_t delay_) : picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	Roll(string name_) : name(name_), picture(nullptr)
 	{
-		name = picture.get_name();
-		update_path(*this);
-
+		download();
 	}
-	Roll(string name_, string picture_name, size_t delay_) : name(name), picture(picture_name), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
+	Roll(string name_, string picture_name, size_t delay_) : name(name_), picture(new T(picture_name)), delay(delay_), pic_pos(0, 0), cur_pos(0, 0, 0, 0)
 	{
 		update_path(*this);
-
+		upload();
 	}
 	//
 	void set_delay(size_t new_delay)
@@ -667,6 +722,6 @@ public:
 	//
 	~Roll()
 	{
-		picture.~Picture();
+		picture->~Picture();
 	}
 };

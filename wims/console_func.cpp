@@ -310,7 +310,7 @@ bool is_hit_()
 	return bit_cnt > 0;
 }
 //wait
-void wait(int milliseconds)
+void wait(size_t milliseconds)
 {
 	usleep(milliseconds * 1000);
 }
