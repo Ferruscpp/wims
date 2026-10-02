@@ -389,6 +389,40 @@ void build_file(O& object)
 	out.close();
 }
 //
+template<typename O>
+void remove(O& object)
+{
+	if (exist(object))
+	{
+		if (std::remove(get_file_name(object).c_str()) != 0)
+		{
+			throw Cant_Remove_File_Exception();
+		}
+	}
+}
+//
+template<typename O>
+void rename(O& object, string new_name)
+{
+	for (size_t i = 0; i < new_name.size(); i++)
+	{
+		if (new_name[i] == '/')
+		{
+			throw File_Name_Exception();
+		}
+	}
+	remove(object);
+	object.name = new_name;
+	object.upload();
+}
+template<typename O>
+void change_folder(O& object, string new_folder)
+{
+	create_folder(new_folder);
+	remove(object);
+	object.folder_name = new_folder;
+	object.upload();
+}
 
 template<typename T>
 class Picture
@@ -573,45 +607,10 @@ public:
 		out.close();
 		return;
 	}
-	void remove()
-	{
-		if (exist(*this))
-		{
-			if (std::remove(get_file_name(*this).c_str()) != 0)
-			{
-				throw Cant_Remove_File_Exception();
-			}
-		}
-	}
+	template<typename O> friend void remove(O& object);
 	//
-	string get_name() const
-	{
-		return name;
-	}
-	string get_folder() const
-	{
-		return folder_name;
-	}
-	void rename(string new_name)
-	{
-		for (size_t i = 0; i < new_name.size(); i++)
-		{
-			if (new_name[i] == '/')
-			{
-				throw File_Name_Exception();
-			}
-		}
-		remove();
-		name = new_name;
-		upload();
-	}
-	void change_folder(string new_folder)
-	{
-		create_folder(new_folder);
-		remove();
-		folder_name = new_folder;
-		upload();
-	}
+	template<typename O> friend void rename(O& object, string new_name);
+	template<typename O> friend void change_folder(O& object, string new_folder);
 	//
 	~Picture()
 	{
@@ -644,45 +643,6 @@ private:
 	template<typename O> friend string get_file_name(O& object);
 	template<typename O> friend bool exist(O& object);
 	template<typename O> friend void build_file(O& object);
-	void download()
-	{
-		ifstream in(get_file_name(*this));
-		if (!in.is_open())
-		{
-			throw File_Not_Found_Exception();
-		}
-		scan_raw(in, delay);
-		in >> pic_pos >> cur_pos;
-		scan_raw(in, time);
-		string path_to_picture;
-		getline(in, path_to_picture);
-		if (picture == nullptr)
-		{
-			picture = new T(path_to_picture);
-		}
-		else
-		{
-			if (get_file_name(*picture) != path_to_picture)
-			{
-				throw Download_Exception();
-			}
-			else
-			{
-				picture->download();
-			}
-		}
-		in.close();
-	}
-	void upload() const
-	{
-		ofstream out(get_file_name(*this));
-		print_raw(out, delay);
-		out << pic_pos << cur_pos;
-		print_raw(out, time);
-		out << get_file_name(*picture);
-		out.close();
-		return;
-	}
 public:
 	Roll(string name_) : name(name_), picture(nullptr)
 	{
@@ -732,6 +692,50 @@ public:
 	{
 		return time;
 	}
+	//
+	void download()
+	{
+		ifstream in(get_file_name(*this));
+		if (!in.is_open())
+		{
+			throw File_Not_Found_Exception();
+		}
+		scan_raw(in, delay);
+		in >> pic_pos >> cur_pos;
+		scan_raw(in, time);
+		string path_to_picture;
+		getline(in, path_to_picture);
+		if (picture == nullptr)
+		{
+			picture = new T(path_to_picture);
+		}
+		else
+		{
+			if (get_file_name(*picture) != path_to_picture)
+			{
+				throw Download_Exception();
+			}
+			else
+			{
+				picture->download();
+			}
+		}
+		in.close();
+	}
+	void upload() const
+	{
+		ofstream out(get_file_name(*this));
+		print_raw(out, delay);
+		out << pic_pos << cur_pos;
+		print_raw(out, time);
+		out << get_file_name(*picture);
+		out.close();
+		return;
+	}
+	template<typename O> friend void remove(O& object);
+	//
+	template<typename O> friend void rename(O& object, string new_name);
+	template<typename O> friend void change_folder(O& object, string new_folder);
 	//
 	~Roll()
 	{
