@@ -15,8 +15,7 @@ int main()
 	try
 	{
 		//Roll<Picture<Pixel<Console_Pixel_16>>> r("test_roll", "New_folder/Try_new_func", 5, 100);
-		Roll<Picture<Pixel<Console_Pixel_16>>> r("test_roll");
-		rename(r, "first_roll");
+		Roll<Picture<Pixel<Console_Pixel_16>>> r("first_roll");
 	}
 	catch (exception &ex)
 	{

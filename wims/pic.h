@@ -5,6 +5,7 @@
 #include <conio.h>
 #include "console_func.h"
 using namespace std;
+using namespace ferruscpp::console;
 
 void scan_raw(istream& in, uint32_t& value)
 {
