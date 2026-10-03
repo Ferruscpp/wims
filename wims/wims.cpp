@@ -1,6 +1,7 @@
 ﻿#include "console_func.h"
 #include "pic.h"
 using namespace std;
+using namespace ferruscpp;
 using namespace ferruscpp::console;
 
 int main()
