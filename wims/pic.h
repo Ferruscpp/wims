@@ -9,15 +9,15 @@ void scan_raw(std::istream& in, uint32_t& value)
 {
 	in.read(reinterpret_cast<char*>(&value), sizeof(value));
 }
-void print_raw(ostream& out, const uint32_t& value)
+void print_raw(std::ostream& out, const uint32_t& value)
 {
 	out.write(reinterpret_cast<const char*>(&value), sizeof(value));
 }
 
-class File_Not_Found_Exception : public exception
+class File_Not_Found_Exception : public std::exception
 {
 private:
-	string massage = "Error: file not found!!!";
+	std::string massage = "Error: file not found!!!";
 public:
 	File_Not_Found_Exception()
 	{
@@ -30,10 +30,10 @@ public:
 	}
 };
 
-class Cant_Remove_File_Exception : public exception
+class Cant_Remove_File_Exception : public std::exception
 {
 private:
-	string massage = "Error: can't remove file!!!";
+	std::string massage = "Error: can't remove file!!!";
 public:
 	Cant_Remove_File_Exception()
 	{
@@ -46,10 +46,10 @@ public:
 	}
 };
 
-class Download_Exception : public exception
+class Download_Exception : public std::exception
 {
 private:
-	string massage = "Error: can't download file!!!";
+	std::string massage = "Error: can't download file!!!";
 public:
 	Download_Exception()
 	{
@@ -62,6 +62,20 @@ public:
 	}
 };
 
+class File_Name_Exception: public std::exception
+{
+private:
+	std::string message = "Error: wrong file name or folder path!!!";
+public:
+	File_Name_Exception()
+	{
+
+	}
+	const char* what() const noexcept override
+	{
+		return message.c_str();
+	}
+};
 
 struct position
 {
@@ -79,32 +93,32 @@ struct position
 	{
 		if (x_ < 0 || y_ < 0)
 		{
-			clog << "Warning: x or y is negative number!" << endl;
+			std::clog << "Warning: x or y is negative number!" << std::endl;
 		}
 		x = x_;
 		y = y_;
 	}
 	//
-	friend istream& operator>>(istream& in, position& pos)
+	friend std::istream& operator>>(std::istream& in, position& pos)
 	{
 		scan_raw(in, pos.x);
 		scan_raw(in, pos.y);
 		return in;
 	}
-	friend ofstream& operator<<(ofstream& out, const position& pos)
+	friend std::ofstream& operator<<(std::ofstream& out, const position& pos)
 	{
 		print_raw(out, pos.x);
 		print_raw(out, pos.y);
 		return out;
 	}
 	//
-	explicit position(pair<size_t, size_t> pos) : x(pos.first), y(pos.second)
+	explicit position(std::pair<size_t, size_t> pos) : x(pos.first), y(pos.second)
 	{
 
 	}
-	operator pair<size_t, size_t>() const
+	operator std::pair<size_t, size_t>() const
 	{
-		return make_pair((size_t)x, (size_t)y);
+		return std::make_pair((size_t)x, (size_t)y);
 	}
 };
 
@@ -112,10 +126,10 @@ struct window4
 {
 	uint32_t x1 = 0, y1 = 0, x2 = ferruscpp::console::get_right_down_angle().first, y2 = ferruscpp::console::get_right_down_angle().second;
 private:
-	class Window_Exception : exception
+	class Window_Exception : std::exception
 	{
 	private:
-		string massage = "Error: wrong angle position!!!";
+		std::string massage = "Error: wrong angle position!!!";
 	public:
 		Window_Exception()
 		{
@@ -144,7 +158,7 @@ public:
 	{
 		check_window4();
 	}
-	window4(initializer_list<uint32_t> list)
+	window4(std::initializer_list<uint32_t> list)
 	{
 		x1 = *list.begin();
 		y1 = *(list.begin() + 1);
@@ -160,7 +174,7 @@ public:
 		scan_raw(in, window.y2);
 		return in;
 	}
-	friend ofstream& operator<<(ofstream& out, const window4& window)
+	friend std::ofstream& operator<<(std::ofstream& out, const window4& window)
 	{
 		print_raw(out, window.x1);
 		print_raw(out, window.y1);
@@ -211,7 +225,7 @@ public:
 	void draw() const
 	{
 		set_color_16(foreground, background);
-		string h;
+		std::string h;
 		h += symbol;
 		ferruscpp::console::putstr_(h);
 	}
@@ -230,19 +244,19 @@ public:
 		foreground = foreground_;
 		background = background_;
 	}
-	static pair<size_t, size_t> get_size()
+	static std::pair<size_t, size_t> get_size()
 	{
-		return make_pair((size_t)1, (size_t)1);
+		return std::make_pair((size_t)1, (size_t)1);
 	}
-	friend istream& operator>>(istream& in, Console_Pixel_16& pixel)
+	friend std::istream& operator>>(std::istream& in, Console_Pixel_16& pixel)
 	{
-		in >> noskipws;
+		in >> std::noskipws;
 		in >> pixel.symbol;
-		in >> skipws;
+		in >> std::skipws;
 		in >> pixel.foreground >> pixel.background;
 		return in;
 	}
-	friend ostream& operator<<(ostream& out, const Console_Pixel_16& pixel)
+	friend std::ostream& operator<<(std::ostream& out, const Console_Pixel_16& pixel)
 	{
 		out << pixel.symbol << pixel.foreground << pixel.background;
 		return out;
@@ -254,7 +268,7 @@ class Pixel
 {
 public:
 	T pixel;
-	Pixel() : pixel(' ', get_foreground_basic_color(), get_background_basic_color())
+	Pixel() : pixel(' ', ferruscpp::console::get_foreground_basic_color(), ferruscpp::console::get_background_basic_color())
 	{
 		
 	}
@@ -267,18 +281,18 @@ public:
 		pixel.draw();
 		pixel.draw();
 	}
-	static pair<size_t, size_t> get_size()
+	static std::pair<size_t, size_t> get_size()
 	{
-		pair<size_t, size_t> answer(T::get_size());
+		std::pair<size_t, size_t> answer(T::get_size());
 		answer.first *= 2;
 		return answer;
 	}
-	friend istream& operator>>(istream& in, Pixel& pixel)
+	friend std::istream& operator>>(std::istream& in, Pixel& pixel)
 	{
 		in >> pixel.pixel;
 		return in;
 	}
-	friend ostream& operator<<(ostream& out, const Pixel& pixel)
+	friend std::ostream& operator<<(std::ostream& out, const Pixel& pixel)
 	{
 		out << pixel.pixel;
 		return out;
@@ -286,21 +300,6 @@ public:
 	~Pixel()
 	{
 
-	}
-};
-
-class File_Name_Exception : public exception
-{
-private:
-	string message = "Error: wrong file name or folder path!!!";
-public:
-	File_Name_Exception()
-	{
-
-	}
-	const char* what() const noexcept override
-	{
-		return message.c_str();
 	}
 };
 
@@ -342,7 +341,7 @@ void update_path(O& object)
 	}
 	//devide on folder and name
 	int seporator_position = -1;
-	string new_name;
+	std::string new_name;
 	for (int i = object.name.size() - 1; i >= 0; --i)
 	{
 		if (object.name[i] == '/')
@@ -369,14 +368,14 @@ void update_path(O& object)
 	object.name = new_name;
 }
 template<typename O>
-string get_file_name(O& object)
+std::string get_file_name(O& object)
 {
 	return object.folder_name + '/' + object.name + object.end_name;
 }
 template<typename O>
 bool exist(O& object)
 {
-	ifstream in(get_file_name(object));
+	std::ifstream in(get_file_name(object));
 	bool answer = in.is_open();
 	in.close();
 	return answer;
@@ -384,10 +383,9 @@ bool exist(O& object)
 template<typename O>
 void build_file(O& object)
 {
-	ofstream out(get_file_name(object));
+	std::ofstream out(get_file_name(object));
 	out.close();
 }
-//
 template<typename O>
 void remove(O& object)
 {
@@ -399,9 +397,8 @@ void remove(O& object)
 		}
 	}
 }
-//
 template<typename O>
-void rename(O& object, string new_name)
+void rename(O& object, std::string new_name)
 {
 	for (size_t i = 0; i < new_name.size(); i++)
 	{
@@ -415,9 +412,9 @@ void rename(O& object, string new_name)
 	object.upload();
 }
 template<typename O>
-void change_folder(O& object, string new_folder)
+void change_folder(O& object, std::string new_folder)
 {
-	create_folder(new_folder);
+	ferruscpp::console::create_folder(new_folder);
 	remove(object);
 	object.folder_name = new_folder;
 	object.upload();
@@ -427,18 +424,18 @@ template<typename T>
 class Picture
 {
 private:
-	string folder_name = "./Pictures";
-	string name;
-	const string end_name = ".pic";
+	std::string folder_name = "./Pictures";
+	std::string name;
+	const std::string end_name = ".pic";
 	uint32_t size_x = 80;
 	uint32_t size_y = 25;
 	position pixel_size;
 	T* pixel_table[300][300];
 	//
-	class Picture_Exception : public exception
+	class Picture_Exception : public std::exception
 	{
 	private:
-		string message = "Error: exite out of picture range!!!";
+		std::string message = "Error: exite out of picture range!!!";
 	public:
 		Picture_Exception()
 		{
@@ -451,7 +448,7 @@ private:
 	};
 	//
 	template<typename O> friend void update_path(O& object);
-	template<typename O> friend string get_file_name(O& object);
+	template<typename O> friend std::string get_file_name(O& object);
 	template<typename O> friend bool exist(O& object);
 	template<typename O> friend void build_file(O& object);
 	//
@@ -483,7 +480,7 @@ private:
 		}
 	}
 public:
-	Picture(string name_) : name(name_)
+	Picture(std::string name_) : name(name_)
 	{
 		update_pixel_size();
 		update_path(*this);
@@ -494,7 +491,7 @@ public:
 		build_pixel_table();
 		download();
 	}
-	Picture(string new_name, size_t x, size_t y) : size_x(x), size_y(y), name(new_name)
+	Picture(std::string new_name, size_t x, size_t y) : size_x(x), size_y(y), name(new_name)
 	{
 		update_pixel_size();
 		update_path(*this);
@@ -507,7 +504,7 @@ public:
 		check_picture_position(pic_pos);
 		cur_pos.screen_check();
 		check_picture_position({ pic_pos.x + (cur_pos.x2 - cur_pos.x1) / pixel_size.x, pic_pos.y + (cur_pos.y2 - cur_pos.y1) / pixel_size.y });
-		set_cursor_pos(cur_pos.x1, cur_pos.y1);
+		ferruscpp::console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
 		//y is position in picture
 		for (size_t y = pic_pos.y; (y - pic_pos.y) * pixel_size.y + cur_pos.y1 <= cur_pos.y2; ++y)
 		{
@@ -524,7 +521,7 @@ public:
 	}
 	void draw_from(position pic_pos) const
 	{
-		position cur_pos(get_cursor_pos());
+		position cur_pos(ferruscpp::console::get_cursor_pos());
 		position sec_cur_pos(cur_pos.x + (size_x - pic_pos.x) * pixel_size.x - 1, cur_pos.y + (size_y - pic_pos.y) * pixel_size.y - 1);
 		window4 window(cur_pos, sec_cur_pos);
 		seg_draw(pic_pos, window);
@@ -535,13 +532,13 @@ public:
 	}
 	void draw() const
 	{
-		draw((position)get_cursor_pos());
+		draw((position)ferruscpp::console::get_cursor_pos());
 	}
 	//
 	void expanded_draw(position pic_pos, window4 cur_pos) const
 	{
 		cur_pos.screen_check();
-		set_cursor_pos(cur_pos.x1, cur_pos.y1);
+		ferruscpp::console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
 		pic_pos.x %= size_x;
 		pic_pos.y %= size_y;
 		for (size_t y = pic_pos.y, pos_y = cur_pos.y1; pos_y <= cur_pos.y2; y = (y + 1) % size_y, pos_y += pixel_size.y)
@@ -563,7 +560,7 @@ public:
 	}
 	void expanded_draw(position right_down_angle) const
 	{
-		window4 cur_pos((position) get_cursor_pos(), right_down_angle);
+		window4 cur_pos((position)ferruscpp::console::get_cursor_pos(), right_down_angle);
 		expanded_draw(cur_pos);
 	}
 	//
@@ -575,7 +572,7 @@ public:
 	//
 	void download()
 	{
-		ifstream in(get_file_name(*this));
+		std::ifstream in(get_file_name(*this));
 		if (!in.is_open())
 		{
 			throw File_Not_Found_Exception();
@@ -593,7 +590,7 @@ public:
 	}
 	void upload() const
 	{
-		ofstream out(get_file_name(*this));
+		std::ofstream out(get_file_name(*this));
 		print_raw(out, size_x);
 		print_raw(out, size_y);
 		for (size_t y = 0; y < size_y; ++y)
@@ -608,8 +605,8 @@ public:
 	}
 	template<typename O> friend void remove(O& object);
 	//
-	template<typename O> friend void rename(O& object, string new_name);
-	template<typename O> friend void change_folder(O& object, string new_folder);
+	template<typename O> friend void rename(O& object, std::string new_name);
+	template<typename O> friend void change_folder(O& object, std::string new_folder);
 	//
 	~Picture()
 	{
@@ -634,26 +631,26 @@ private:
 	window4 cur_pos;
 	uint32_t time;
 	//
-	string folder_name = "./Rolls";
-	string name;
-	const string end_name = ".roll";
+	std::string folder_name = "./Rolls";
+	std::string name;
+	const std::string end_name = ".roll";
 	//
 	template<typename O> friend void update_path(O& object);
-	template<typename O> friend string get_file_name(O& object);
+	template<typename O> friend std::string get_file_name(O& object);
 	template<typename O> friend bool exist(O& object);
 	template<typename O> friend void build_file(O& object);
 public:
-	Roll(string name_) : name(name_), picture(nullptr)
+	Roll(std::string name_) : name(name_), picture(nullptr)
 	{
 		download();
 	}
-	Roll(string name_, string picture_name, uint32_t delay_, position pic_pos_, window4 cur_pos_, uint32_t time_)
+	Roll(std::string name_, std::string picture_name, uint32_t delay_, position pic_pos_, window4 cur_pos_, uint32_t time_)
 		: name(name_), picture(new T(picture_name)), delay(delay_), pic_pos(pic_pos_), cur_pos(cur_pos_), time(time_)
 	{
 		update_path(*this);
 		upload();
 	}
-	Roll(string name_, string picture_name, size_t delay_, size_t time_) : Roll(name_, picture_name, delay_, position(), window4(), time_)
+	Roll(std::string name_, std::string picture_name, size_t delay_, size_t time_) : Roll(name_, picture_name, delay_, position(), window4(), time_)
 	{
 		
 	}
@@ -694,7 +691,7 @@ public:
 	//
 	void download()
 	{
-		ifstream in(get_file_name(*this));
+		std::ifstream in(get_file_name(*this));
 		if (!in.is_open())
 		{
 			throw File_Not_Found_Exception();
@@ -702,7 +699,7 @@ public:
 		scan_raw(in, delay);
 		in >> pic_pos >> cur_pos;
 		scan_raw(in, time);
-		string path_to_picture;
+		std::string path_to_picture;
 		getline(in, path_to_picture);
 		if (picture == nullptr)
 		{
@@ -723,7 +720,7 @@ public:
 	}
 	void upload() const
 	{
-		ofstream out(get_file_name(*this));
+		std::ofstream out(get_file_name(*this));
 		print_raw(out, delay);
 		out << pic_pos << cur_pos;
 		print_raw(out, time);
@@ -733,8 +730,8 @@ public:
 	}
 	template<typename O> friend void remove(O& object);
 	//
-	template<typename O> friend void rename(O& object, string new_name);
-	template<typename O> friend void change_folder(O& object, string new_folder);
+	template<typename O> friend void rename(O& object, std::string new_name);
+	template<typename O> friend void change_folder(O& object, std::string new_folder);
 	//
 	~Roll()
 	{
