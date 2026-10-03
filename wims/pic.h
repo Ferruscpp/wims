@@ -4,10 +4,8 @@
 #include <fstream>
 #include <conio.h>
 #include "console_func.h"
-using namespace std;
-using namespace ferruscpp::console;
 
-void scan_raw(istream& in, uint32_t& value)
+void scan_raw(std::istream& in, uint32_t& value)
 {
 	in.read(reinterpret_cast<char*>(&value), sizeof(value));
 }
@@ -112,7 +110,7 @@ struct position
 
 struct window4
 {
-	uint32_t x1 = 0, y1 = 0, x2 = get_right_down_angle().first, y2 = get_right_down_angle().second;
+	uint32_t x1 = 0, y1 = 0, x2 = ferruscpp::console::get_right_down_angle().first, y2 = ferruscpp::console::get_right_down_angle().second;
 private:
 	class Window_Exception : exception
 	{
@@ -154,7 +152,7 @@ public:
 		y2 = *(list.begin() + 3);
 	}
 	//
-	friend istream& operator>>(istream& in, window4& window)
+	friend std::istream& operator>>(std::istream& in, window4& window)
 	{
 		scan_raw(in, window.x1);
 		scan_raw(in, window.y1);
@@ -173,8 +171,8 @@ public:
 	//
 	void screen_check() const
 	{
-		check_position(x1, y1);
-		check_position(x2, y2);
+		ferruscpp::console::check_position(x1, y1);
+		ferruscpp::console::check_position(x2, y2);
 	}
 };
 
@@ -200,13 +198,13 @@ class Console_Pixel_16
 {
 private:
 	char symbol;
-	c16 foreground, background;
+	ferruscpp::console::c16 foreground, background;
 public:
 	Console_Pixel_16()
 	{
 
 	}
-	Console_Pixel_16(char symbol_, c16 foreground_, c16 background_) : symbol(' '), foreground(get_foreground_basic_color()), background(get_background_basic_color())
+	Console_Pixel_16(char symbol_, ferruscpp::console::c16 foreground_, ferruscpp::console::c16 background_) : symbol(' '), foreground(ferruscpp::console::get_foreground_basic_color()), background(ferruscpp::console::get_background_basic_color())
 	{
 
 	}
@@ -215,18 +213,18 @@ public:
 		set_color_16(foreground, background);
 		string h;
 		h += symbol;
-		putstr_(h);
+		ferruscpp::console::putstr_(h);
 	}
 	void set(char symbol_)
 	{
 		symbol = symbol_;
 	}
-	void set(c16 foreground_, c16 background_)
+	void set(ferruscpp::console::c16 foreground_, ferruscpp::console::c16 background_)
 	{
 		foreground = foreground_;
 		background = background_;
 	}
-	void set(char symbol_, c16 foreground_, c16 background_)
+	void set(char symbol_, ferruscpp::console::c16 foreground_, ferruscpp::console::c16 background_)
 	{
 		symbol = symbol_;
 		foreground = foreground_;
