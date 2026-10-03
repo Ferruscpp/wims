@@ -198,118 +198,122 @@ namespace ferruscpp
 			}
 		};
 	}
-	//need realizatin
-	class Pixel_rgb
+
+	namespace pixels
 	{
-	private:
+		//need realizatin
+		class Console_Pixel_rgb
+		{
+		private:
 
-	public:
+		public:
 
-	};
+		};
 
-	//need realizetion
-	class Pixel_8bit
-	{
-	private:
+		//need realizetion
+		class Console_Pixel_8bit
+		{
+		private:
 
-	public:
+		public:
 
-	};
+		};
 
-	class Console_Pixel_16
-	{
-	private:
-		char symbol;
-		console::c16 foreground, background;
-	public:
-		Console_Pixel_16()
+		class Console_Pixel_16
 		{
+		private:
+			char symbol;
+			console::c16 foreground, background;
+		public:
+			Console_Pixel_16()
+			{
 
-		}
-		Console_Pixel_16(char symbol_, console::c16 foreground_, console::c16 background_) : symbol(' '), foreground(console::get_foreground_basic_color()), background(console::get_background_basic_color())
-		{
+			}
+			Console_Pixel_16(char symbol_, console::c16 foreground_, console::c16 background_) : symbol(' '), foreground(console::get_foreground_basic_color()), background(console::get_background_basic_color())
+			{
 
-		}
-		void draw() const
-		{
-			set_color_16(foreground, background);
-			std::string h;
-			h += symbol;
-			console::putstr_(h);
-		}
-		void set(char symbol_)
-		{
-			symbol = symbol_;
-		}
-		void set(console::c16 foreground_, console::c16 background_)
-		{
-			foreground = foreground_;
-			background = background_;
-		}
-		void set(char symbol_, console::c16 foreground_, console::c16 background_)
-		{
-			symbol = symbol_;
-			foreground = foreground_;
-			background = background_;
-		}
-		static std::pair<size_t, size_t> get_size()
-		{
-			return std::make_pair((size_t)1, (size_t)1);
-		}
-		friend std::istream& operator>>(std::istream& in, Console_Pixel_16& pixel)
-		{
-			in >> std::noskipws;
-			in >> pixel.symbol;
-			in >> std::skipws;
-			in >> pixel.foreground >> pixel.background;
-			return in;
-		}
-		friend std::ostream& operator<<(std::ostream& out, const Console_Pixel_16& pixel)
-		{
-			out << pixel.symbol << pixel.foreground << pixel.background;
-			return out;
-		}
-	};
+			}
+			void draw() const
+			{
+				set_color_16(foreground, background);
+				std::string h;
+				h += symbol;
+				console::putstr_(h);
+			}
+			void set(char symbol_)
+			{
+				symbol = symbol_;
+			}
+			void set(console::c16 foreground_, console::c16 background_)
+			{
+				foreground = foreground_;
+				background = background_;
+			}
+			void set(char symbol_, console::c16 foreground_, console::c16 background_)
+			{
+				symbol = symbol_;
+				foreground = foreground_;
+				background = background_;
+			}
+			static std::pair<size_t, size_t> get_size()
+			{
+				return std::make_pair((size_t)1, (size_t)1);
+			}
+			friend std::istream& operator>>(std::istream& in, Console_Pixel_16& pixel)
+			{
+				in >> std::noskipws;
+				in >> pixel.symbol;
+				in >> std::skipws;
+				in >> pixel.foreground >> pixel.background;
+				return in;
+			}
+			friend std::ostream& operator<<(std::ostream& out, const Console_Pixel_16& pixel)
+			{
+				out << pixel.symbol << pixel.foreground << pixel.background;
+				return out;
+			}
+		};
 
-	template<typename T>
-	class Pixel
-	{
-	public:
-		T pixel;
-		Pixel() : pixel(' ', console::get_foreground_basic_color(), console::get_background_basic_color())
+		template<typename T>
+		class Pixel
 		{
+		public:
+			T pixel;
+			Pixel() : pixel(' ', console::get_foreground_basic_color(), console::get_background_basic_color())
+			{
 
-		}
-		Pixel(T pixel_) : pixel(pixel_)
-		{
+			}
+			Pixel(T pixel_) : pixel(pixel_)
+			{
 
-		}
-		void draw() const
-		{
-			pixel.draw();
-			pixel.draw();
-		}
-		static std::pair<size_t, size_t> get_size()
-		{
-			std::pair<size_t, size_t> answer(T::get_size());
-			answer.first *= 2;
-			return answer;
-		}
-		friend std::istream& operator>>(std::istream& in, Pixel& pixel)
-		{
-			in >> pixel.pixel;
-			return in;
-		}
-		friend std::ostream& operator<<(std::ostream& out, const Pixel& pixel)
-		{
-			out << pixel.pixel;
-			return out;
-		}
-		~Pixel()
-		{
+			}
+			void draw() const
+			{
+				pixel.draw();
+				pixel.draw();
+			}
+			static std::pair<size_t, size_t> get_size()
+			{
+				std::pair<size_t, size_t> answer(T::get_size());
+				answer.first *= 2;
+				return answer;
+			}
+			friend std::istream& operator>>(std::istream& in, Pixel& pixel)
+			{
+				in >> pixel.pixel;
+				return in;
+			}
+			friend std::ostream& operator<<(std::ostream& out, const Pixel& pixel)
+			{
+				out << pixel.pixel;
+				return out;
+			}
+			~Pixel()
+			{
 
-		}
-	};
+			}
+		};
+	}
 
 	//functions for files
 	template<typename O>

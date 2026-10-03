@@ -3,6 +3,7 @@
 using namespace std;
 using namespace ferruscpp;
 using namespace ferruscpp::console;
+using namespace ferruscpp::pixels;
 
 int main()
 {
