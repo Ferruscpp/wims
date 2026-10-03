@@ -3,7 +3,10 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstdint>
+#include <initializer_list>
 #include <string>
+#include <utility>
 #include <chrono>
 
 #if _WIN32
