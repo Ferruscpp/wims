@@ -1,5 +1,5 @@
 ﻿#include "console_func.h"
-#include "pic.h"
+#include "ferruscpp_media.h"
 using namespace std;
 using namespace ferruscpp;
 using namespace ferruscpp::console;
