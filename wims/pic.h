@@ -315,121 +315,124 @@ namespace ferruscpp
 		};
 	}
 
-	//functions for files
-	template<typename O>
-	void update_path(O& object)
+	namespace files
 	{
-		//delete base folder
-		int base_folder_length = object.folder_name.size();
-		if (base_folder_length <= object.name.size())
+		//functions for files
+		template<typename O>
+		void update_path(O& object)
 		{
-			bool is_need_to_delete = true;
-			for (int i = 0; i < base_folder_length; ++i)
+			//delete base folder
+			int base_folder_length = object.folder_name.size();
+			if (base_folder_length <= object.name.size())
 			{
-				if (object.name[i] != object.folder_name[i])
+				bool is_need_to_delete = true;
+				for (int i = 0; i < base_folder_length; ++i)
 				{
-					is_need_to_delete = false;
+					if (object.name[i] != object.folder_name[i])
+					{
+						is_need_to_delete = false;
+						break;
+					}
+				}
+				if (is_need_to_delete)
+				{
+					object.name.erase(0, base_folder_length);
+				}
+			}
+			//delete extension
+			int last_position = object.name.size() - object.end_name.size();
+			if (0 <= last_position)
+			{
+				if (object.name[last_position] == '.')
+				{
+					object.name.erase(last_position, object.end_name.size());
+				}
+			}
+			//clean first '/'
+			if (object.name[0] == '/')
+			{
+				object.name.erase(0, 1);
+			}
+			//devide on folder and name
+			int seporator_position = -1;
+			std::string new_name;
+			for (int i = object.name.size() - 1; i >= 0; --i)
+			{
+				if (object.name[i] == '/')
+				{
+					seporator_position = i;
 					break;
 				}
 			}
-			if (is_need_to_delete)
+			if (seporator_position > 0)
 			{
-				object.name.erase(0, base_folder_length);
+				object.folder_name += '/';
+			}
+			for (int i = 0; i < object.name.size(); ++i)
+			{
+				if (i < seporator_position)
+				{
+					object.folder_name += object.name[i];
+				}
+				else if (seporator_position < i)
+				{
+					new_name += object.name[i];
+				}
+			}
+			object.name = new_name;
+		}
+		template<typename O>
+		std::string get_file_name(O& object)
+		{
+			return object.folder_name + '/' + object.name + object.end_name;
+		}
+		template<typename O>
+		bool exist(O& object)
+		{
+			std::ifstream in(get_file_name(object));
+			bool answer = in.is_open();
+			in.close();
+			return answer;
+		}
+		template<typename O>
+		void build_file(O& object)
+		{
+			std::ofstream out(get_file_name(object));
+			out.close();
+		}
+		template<typename O>
+		void remove(O& object)
+		{
+			if (exist(object))
+			{
+				if (std::remove(get_file_name(object).c_str()) != 0)
+				{
+					throw exceptions::Cant_Remove_File_Exception();
+				}
 			}
 		}
-		//delete extension
-		int last_position = object.name.size() - object.end_name.size();
-		if (0 <= last_position)
+		template<typename O>
+		void rename(O& object, std::string new_name)
 		{
-			if (object.name[last_position] == '.')
+			for (size_t i = 0; i < new_name.size(); i++)
 			{
-				object.name.erase(last_position, object.end_name.size());
+				if (new_name[i] == '/')
+				{
+					throw exceptions::File_Name_Exception();
+				}
 			}
+			remove(object);
+			object.name = new_name;
+			object.upload();
 		}
-		//clean first '/'
-		if (object.name[0] == '/')
+		template<typename O>
+		void change_folder(O& object, std::string new_folder)
 		{
-			object.name.erase(0, 1);
+			console::create_folder(new_folder);
+			remove(object);
+			object.folder_name = new_folder;
+			object.upload();
 		}
-		//devide on folder and name
-		int seporator_position = -1;
-		std::string new_name;
-		for (int i = object.name.size() - 1; i >= 0; --i)
-		{
-			if (object.name[i] == '/')
-			{
-				seporator_position = i;
-				break;
-			}
-		}
-		if (seporator_position > 0)
-		{
-			object.folder_name += '/';
-		}
-		for (int i = 0; i < object.name.size(); ++i)
-		{
-			if (i < seporator_position)
-			{
-				object.folder_name += object.name[i];
-			}
-			else if (seporator_position < i)
-			{
-				new_name += object.name[i];
-			}
-		}
-		object.name = new_name;
-	}
-	template<typename O>
-	std::string get_file_name(O& object)
-	{
-		return object.folder_name + '/' + object.name + object.end_name;
-	}
-	template<typename O>
-	bool exist(O& object)
-	{
-		std::ifstream in(get_file_name(object));
-		bool answer = in.is_open();
-		in.close();
-		return answer;
-	}
-	template<typename O>
-	void build_file(O& object)
-	{
-		std::ofstream out(get_file_name(object));
-		out.close();
-	}
-	template<typename O>
-	void remove(O& object)
-	{
-		if (exist(object))
-		{
-			if (std::remove(get_file_name(object).c_str()) != 0)
-			{
-				throw exceptions::Cant_Remove_File_Exception();
-			}
-		}
-	}
-	template<typename O>
-	void rename(O& object, std::string new_name)
-	{
-		for (size_t i = 0; i < new_name.size(); i++)
-		{
-			if (new_name[i] == '/')
-			{
-				throw exceptions::File_Name_Exception();
-			}
-		}
-		remove(object);
-		object.name = new_name;
-		object.upload();
-	}
-	template<typename O>
-	void change_folder(O& object, std::string new_folder)
-	{
-		console::create_folder(new_folder);
-		remove(object);
-		object.folder_name = new_folder;
-		object.upload();
 	}
 
 	template<typename T>
@@ -459,10 +462,10 @@ namespace ferruscpp
 			}
 		};
 		//
-		template<typename O> friend void update_path(O& object);
-		template<typename O> friend std::string get_file_name(O& object);
-		template<typename O> friend bool exist(O& object);
-		template<typename O> friend void build_file(O& object);
+		template<typename O> friend void files::update_path(O& object);
+		template<typename O> friend std::string files::get_file_name(O& object);
+		template<typename O> friend bool files::exist(O& object);
+		template<typename O> friend void files::build_file(O& object);
 		//
 		void update_pixel_size()
 		{
@@ -495,8 +498,8 @@ namespace ferruscpp
 		Picture(std::string name_) : name(name_)
 		{
 			update_pixel_size();
-			update_path(*this);
-			if (!exist(*this))
+			files::update_path(*this);
+			if (!files::exist(*this))
 			{
 				throw exceptions::File_Not_Found_Exception();
 			}
@@ -506,7 +509,7 @@ namespace ferruscpp
 		Picture(std::string new_name, size_t x, size_t y) : size_x(x), size_y(y), name(new_name)
 		{
 			update_pixel_size();
-			update_path(*this);
+			files::update_path(*this);
 			build_file(*this);
 			build_pixel_table();
 		}
@@ -584,7 +587,7 @@ namespace ferruscpp
 		//
 		void download()
 		{
-			std::ifstream in(get_file_name(*this));
+			std::ifstream in(files::get_file_name(*this));
 			if (!in.is_open())
 			{
 				throw exceptions::File_Not_Found_Exception();
@@ -602,7 +605,7 @@ namespace ferruscpp
 		}
 		void upload() const
 		{
-			std::ofstream out(get_file_name(*this));
+			std::ofstream out(files::get_file_name(*this));
 			print_raw(out, size_x);
 			print_raw(out, size_y);
 			for (size_t y = 0; y < size_y; ++y)
@@ -615,10 +618,10 @@ namespace ferruscpp
 			out.close();
 			return;
 		}
-		template<typename O> friend void remove(O& object);
+		template<typename O> friend void files::remove(O& object);
 		//
-		template<typename O> friend void rename(O& object, std::string new_name);
-		template<typename O> friend void change_folder(O& object, std::string new_folder);
+		template<typename O> friend void files::rename(O& object, std::string new_name);
+		template<typename O> friend void files::change_folder(O& object, std::string new_folder);
 		//
 		~Picture()
 		{
@@ -647,10 +650,10 @@ namespace ferruscpp
 		std::string name;
 		const std::string end_name = ".roll";
 		//
-		template<typename O> friend void update_path(O& object);
-		template<typename O> friend std::string get_file_name(O& object);
-		template<typename O> friend bool exist(O& object);
-		template<typename O> friend void build_file(O& object);
+		template<typename O> friend void files::update_path(O& object);
+		template<typename O> friend std::string files::get_file_name(O& object);
+		template<typename O> friend bool files::exist(O& object);
+		template<typename O> friend void files::build_file(O& object);
 	public:
 		Roll(std::string name_) : name(name_), picture(nullptr)
 		{
@@ -659,7 +662,7 @@ namespace ferruscpp
 		Roll(std::string name_, std::string picture_name, uint32_t delay_, points::position pic_pos_, points::window4 cur_pos_, uint32_t time_)
 			: name(name_), picture(new T(picture_name)), delay(delay_), pic_pos(pic_pos_), cur_pos(cur_pos_), time(time_)
 		{
-			update_path(*this);
+			files::update_path(*this);
 			upload();
 		}
 		Roll(std::string name_, std::string picture_name, size_t delay_, size_t time_) : Roll(name_, picture_name, delay_, points::position(), points::window4(), time_)
@@ -703,7 +706,7 @@ namespace ferruscpp
 		//
 		void download()
 		{
-			std::ifstream in(get_file_name(*this));
+			std::ifstream in(files::get_file_name(*this));
 			if (!in.is_open())
 			{
 				throw exceptions::File_Not_Found_Exception();
@@ -719,7 +722,7 @@ namespace ferruscpp
 			}
 			else
 			{
-				if (get_file_name(*picture) != path_to_picture)
+				if (files::get_file_name(*picture) != path_to_picture)
 				{
 					throw exceptions::Download_Exception();
 				}
@@ -740,10 +743,10 @@ namespace ferruscpp
 			out.close();
 			return;
 		}
-		template<typename O> friend void remove(O& object);
+		template<typename O> friend void files::remove(O& object);
 		//
-		template<typename O> friend void rename(O& object, std::string new_name);
-		template<typename O> friend void change_folder(O& object, std::string new_folder);
+		template<typename O> friend void files::rename(O& object, std::string new_name);
+		template<typename O> friend void files::change_folder(O& object, std::string new_folder);
 		//
 		~Roll()
 		{
