@@ -132,7 +132,7 @@ namespace ferruscpp
 
 		struct window4
 		{
-			uint32_t x1 = 0, y1 = 0, x2 = ferruscpp::console::get_right_down_angle().first, y2 = ferruscpp::console::get_right_down_angle().second;
+			uint32_t x1 = 0, y1 = 0, x2 = console::get_right_down_angle().first, y2 = console::get_right_down_angle().second;
 		private:
 			class Window_Exception : std::exception
 			{
@@ -193,8 +193,8 @@ namespace ferruscpp
 			//
 			void screen_check() const
 			{
-				ferruscpp::console::check_position(x1, y1);
-				ferruscpp::console::check_position(x2, y2);
+				console::check_position(x1, y1);
+				console::check_position(x2, y2);
 			}
 		};
 	}
@@ -220,13 +220,13 @@ namespace ferruscpp
 	{
 	private:
 		char symbol;
-		ferruscpp::console::c16 foreground, background;
+		console::c16 foreground, background;
 	public:
 		Console_Pixel_16()
 		{
 
 		}
-		Console_Pixel_16(char symbol_, ferruscpp::console::c16 foreground_, ferruscpp::console::c16 background_) : symbol(' '), foreground(ferruscpp::console::get_foreground_basic_color()), background(ferruscpp::console::get_background_basic_color())
+		Console_Pixel_16(char symbol_, console::c16 foreground_, console::c16 background_) : symbol(' '), foreground(console::get_foreground_basic_color()), background(console::get_background_basic_color())
 		{
 
 		}
@@ -235,18 +235,18 @@ namespace ferruscpp
 			set_color_16(foreground, background);
 			std::string h;
 			h += symbol;
-			ferruscpp::console::putstr_(h);
+			console::putstr_(h);
 		}
 		void set(char symbol_)
 		{
 			symbol = symbol_;
 		}
-		void set(ferruscpp::console::c16 foreground_, ferruscpp::console::c16 background_)
+		void set(console::c16 foreground_, console::c16 background_)
 		{
 			foreground = foreground_;
 			background = background_;
 		}
-		void set(char symbol_, ferruscpp::console::c16 foreground_, ferruscpp::console::c16 background_)
+		void set(char symbol_, console::c16 foreground_, console::c16 background_)
 		{
 			symbol = symbol_;
 			foreground = foreground_;
@@ -276,7 +276,7 @@ namespace ferruscpp
 	{
 	public:
 		T pixel;
-		Pixel() : pixel(' ', ferruscpp::console::get_foreground_basic_color(), ferruscpp::console::get_background_basic_color())
+		Pixel() : pixel(' ', console::get_foreground_basic_color(), console::get_background_basic_color())
 		{
 
 		}
@@ -422,7 +422,7 @@ namespace ferruscpp
 	template<typename O>
 	void change_folder(O& object, std::string new_folder)
 	{
-		ferruscpp::console::create_folder(new_folder);
+		console::create_folder(new_folder);
 		remove(object);
 		object.folder_name = new_folder;
 		object.upload();
@@ -512,7 +512,7 @@ namespace ferruscpp
 			check_picture_position(pic_pos);
 			cur_pos.screen_check();
 			check_picture_position({ pic_pos.x + (cur_pos.x2 - cur_pos.x1) / pixel_size.x, pic_pos.y + (cur_pos.y2 - cur_pos.y1) / pixel_size.y });
-			ferruscpp::console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
+			console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
 			//y is position in picture
 			for (size_t y = pic_pos.y; (y - pic_pos.y) * pixel_size.y + cur_pos.y1 <= cur_pos.y2; ++y)
 			{
@@ -523,13 +523,13 @@ namespace ferruscpp
 				size_t next_position_in_console_y = (y - pic_pos.y + 1) * pixel_size.y + cur_pos.y1;
 				if (next_position_in_console_y <= cur_pos.y2)
 				{
-					set_cursor_pos(cur_pos.x1, next_position_in_console_y);
+					console::set_cursor_pos(cur_pos.x1, next_position_in_console_y);
 				}
 			}
 		}
 		void draw_from(points::position pic_pos) const
 		{
-			points::position cur_pos(ferruscpp::console::get_cursor_pos());
+			points::position cur_pos(console::get_cursor_pos());
 			points::position sec_cur_pos(cur_pos.x + (size_x - pic_pos.x) * pixel_size.x - 1, cur_pos.y + (size_y - pic_pos.y) * pixel_size.y - 1);
 			points::window4 window(cur_pos, sec_cur_pos);
 			seg_draw(pic_pos, window);
@@ -540,13 +540,13 @@ namespace ferruscpp
 		}
 		void draw() const
 		{
-			draw((points::position)ferruscpp::console::get_cursor_pos());
+			draw((points::position)console::get_cursor_pos());
 		}
 		//
 		void expanded_draw(points::position pic_pos, points::window4 cur_pos) const
 		{
 			cur_pos.screen_check();
-			ferruscpp::console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
+			console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
 			pic_pos.x %= size_x;
 			pic_pos.y %= size_y;
 			for (size_t y = pic_pos.y, pos_y = cur_pos.y1; pos_y <= cur_pos.y2; y = (y + 1) % size_y, pos_y += pixel_size.y)
@@ -568,7 +568,7 @@ namespace ferruscpp
 		}
 		void expanded_draw(points::position right_down_angle) const
 		{
-			points::window4 cur_pos((points::position)ferruscpp::console::get_cursor_pos(), right_down_angle);
+			points::window4 cur_pos((points::position)console::get_cursor_pos(), right_down_angle);
 			expanded_draw(cur_pos);
 		}
 		//
