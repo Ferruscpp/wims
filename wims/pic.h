@@ -82,119 +82,122 @@ namespace ferruscpp
 			}
 		};
 	}
-	struct position
+
+	namespace points
 	{
-		uint32_t x = 0, y = 0;
-		position() = default;
-		position(size_t x_, size_t y_) : x(x_), y(y_)
+		struct position
 		{
-
-		}
-		position(uint32_t x_, uint32_t y_) : x(x_), y(y_)
-		{
-
-		}
-		position(int x_, int y_)
-		{
-			if (x_ < 0 || y_ < 0)
-			{
-				std::clog << "Warning: x or y is negative number!" << std::endl;
-			}
-			x = x_;
-			y = y_;
-		}
-		//
-		friend std::istream& operator>>(std::istream& in, position& pos)
-		{
-			scan_raw(in, pos.x);
-			scan_raw(in, pos.y);
-			return in;
-		}
-		friend std::ofstream& operator<<(std::ofstream& out, const position& pos)
-		{
-			print_raw(out, pos.x);
-			print_raw(out, pos.y);
-			return out;
-		}
-		//
-		explicit position(std::pair<size_t, size_t> pos) : x(pos.first), y(pos.second)
-		{
-
-		}
-		operator std::pair<size_t, size_t>() const
-		{
-			return std::make_pair((size_t)x, (size_t)y);
-		}
-	};
-
-	struct window4
-	{
-		uint32_t x1 = 0, y1 = 0, x2 = ferruscpp::console::get_right_down_angle().first, y2 = ferruscpp::console::get_right_down_angle().second;
-	private:
-		class Window_Exception : std::exception
-		{
-		private:
-			std::string massage = "Error: wrong angle position!!!";
-		public:
-			Window_Exception()
+			uint32_t x = 0, y = 0;
+			position() = default;
+			position(size_t x_, size_t y_) : x(x_), y(y_)
 			{
 
 			}
-
-			const char* what() const noexcept override
+			position(uint32_t x_, uint32_t y_) : x(x_), y(y_)
 			{
-				return massage.c_str();
+
+			}
+			position(int x_, int y_)
+			{
+				if (x_ < 0 || y_ < 0)
+				{
+					std::clog << "Warning: x or y is negative number!" << std::endl;
+				}
+				x = x_;
+				y = y_;
+			}
+			//
+			friend std::istream& operator>>(std::istream& in, position& pos)
+			{
+				scan_raw(in, pos.x);
+				scan_raw(in, pos.y);
+				return in;
+			}
+			friend std::ofstream& operator<<(std::ofstream& out, const position& pos)
+			{
+				print_raw(out, pos.x);
+				print_raw(out, pos.y);
+				return out;
+			}
+			//
+			explicit position(std::pair<size_t, size_t> pos) : x(pos.first), y(pos.second)
+			{
+
+			}
+			operator std::pair<size_t, size_t>() const
+			{
+				return std::make_pair((size_t)x, (size_t)y);
 			}
 		};
-		void check_window4()
-		{
-			if (x2 < x1 || y2 < y1)
-			{
-				throw Window_Exception();
-			}
-		}
-	public:
-		window4() = default;
-		window4(uint32_t x1_, uint32_t y1_, uint32_t x2_, uint32_t y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
-		{
-			check_window4();
-		}
-		window4(position left_up_angle, position right_down_angle) : x1(left_up_angle.x), y1(left_up_angle.y), x2(right_down_angle.x), y2(right_down_angle.y)
-		{
-			check_window4();
-		}
-		window4(std::initializer_list<uint32_t> list)
-		{
-			x1 = *list.begin();
-			y1 = *(list.begin() + 1);
-			x2 = *(list.begin() + 2);
-			y2 = *(list.begin() + 3);
-		}
-		//
-		friend std::istream& operator>>(std::istream& in, window4& window)
-		{
-			scan_raw(in, window.x1);
-			scan_raw(in, window.y1);
-			scan_raw(in, window.x2);
-			scan_raw(in, window.y2);
-			return in;
-		}
-		friend std::ofstream& operator<<(std::ofstream& out, const window4& window)
-		{
-			print_raw(out, window.x1);
-			print_raw(out, window.y1);
-			print_raw(out, window.x2);
-			print_raw(out, window.y2);
-			return out;
-		}
-		//
-		void screen_check() const
-		{
-			ferruscpp::console::check_position(x1, y1);
-			ferruscpp::console::check_position(x2, y2);
-		}
-	};
 
+		struct window4
+		{
+			uint32_t x1 = 0, y1 = 0, x2 = ferruscpp::console::get_right_down_angle().first, y2 = ferruscpp::console::get_right_down_angle().second;
+		private:
+			class Window_Exception : std::exception
+			{
+			private:
+				std::string massage = "Error: wrong angle position!!!";
+			public:
+				Window_Exception()
+				{
+
+				}
+
+				const char* what() const noexcept override
+				{
+					return massage.c_str();
+				}
+			};
+			void check_window4()
+			{
+				if (x2 < x1 || y2 < y1)
+				{
+					throw Window_Exception();
+				}
+			}
+		public:
+			window4() = default;
+			window4(uint32_t x1_, uint32_t y1_, uint32_t x2_, uint32_t y2_) : x1(x1_), y1(y1_), x2(x2_), y2(y2_)
+			{
+				check_window4();
+			}
+			window4(position left_up_angle, position right_down_angle) : x1(left_up_angle.x), y1(left_up_angle.y), x2(right_down_angle.x), y2(right_down_angle.y)
+			{
+				check_window4();
+			}
+			window4(std::initializer_list<uint32_t> list)
+			{
+				x1 = *list.begin();
+				y1 = *(list.begin() + 1);
+				x2 = *(list.begin() + 2);
+				y2 = *(list.begin() + 3);
+			}
+			//
+			friend std::istream& operator>>(std::istream& in, window4& window)
+			{
+				scan_raw(in, window.x1);
+				scan_raw(in, window.y1);
+				scan_raw(in, window.x2);
+				scan_raw(in, window.y2);
+				return in;
+			}
+			friend std::ofstream& operator<<(std::ofstream& out, const window4& window)
+			{
+				print_raw(out, window.x1);
+				print_raw(out, window.y1);
+				print_raw(out, window.x2);
+				print_raw(out, window.y2);
+				return out;
+			}
+			//
+			void screen_check() const
+			{
+				ferruscpp::console::check_position(x1, y1);
+				ferruscpp::console::check_position(x2, y2);
+			}
+		};
+	}
 	//need realizatin
 	class Pixel_rgb
 	{
@@ -434,7 +437,7 @@ namespace ferruscpp
 		const std::string end_name = ".pic";
 		uint32_t size_x = 80;
 		uint32_t size_y = 25;
-		position pixel_size;
+		points::position pixel_size;
 		T* pixel_table[300][300];
 		//
 		class Picture_Exception : public std::exception
@@ -459,10 +462,10 @@ namespace ferruscpp
 		//
 		void update_pixel_size()
 		{
-			pixel_size = (position)T::get_size();
+			pixel_size = (points::position)T::get_size();
 		}
 		//
-		void check_picture_position(position pic_pos) const
+		void check_picture_position(points::position pic_pos) const
 		{
 			if (pic_pos.x < 0 || size_x <= pic_pos.x)
 			{
@@ -504,7 +507,7 @@ namespace ferruscpp
 			build_pixel_table();
 		}
 		//
-		void seg_draw(position pic_pos, window4 cur_pos) const
+		void seg_draw(points::position pic_pos, points::window4 cur_pos) const
 		{
 			check_picture_position(pic_pos);
 			cur_pos.screen_check();
@@ -524,23 +527,23 @@ namespace ferruscpp
 				}
 			}
 		}
-		void draw_from(position pic_pos) const
+		void draw_from(points::position pic_pos) const
 		{
-			position cur_pos(ferruscpp::console::get_cursor_pos());
-			position sec_cur_pos(cur_pos.x + (size_x - pic_pos.x) * pixel_size.x - 1, cur_pos.y + (size_y - pic_pos.y) * pixel_size.y - 1);
-			window4 window(cur_pos, sec_cur_pos);
+			points::position cur_pos(ferruscpp::console::get_cursor_pos());
+			points::position sec_cur_pos(cur_pos.x + (size_x - pic_pos.x) * pixel_size.x - 1, cur_pos.y + (size_y - pic_pos.y) * pixel_size.y - 1);
+			points::window4 window(cur_pos, sec_cur_pos);
 			seg_draw(pic_pos, window);
 		}
-		void draw(position cur_pos) const
+		void draw(points::position cur_pos) const
 		{
-			seg_draw(position(0, 0), window4(cur_pos, position(cur_pos.x + size_x * pixel_size.x - 1, cur_pos.y + size_y * pixel_size.y - 1)));
+			seg_draw(points::position(0, 0), points::window4(cur_pos, points::position(cur_pos.x + size_x * pixel_size.x - 1, cur_pos.y + size_y * pixel_size.y - 1)));
 		}
 		void draw() const
 		{
-			draw((position)ferruscpp::console::get_cursor_pos());
+			draw((points::position)ferruscpp::console::get_cursor_pos());
 		}
 		//
-		void expanded_draw(position pic_pos, window4 cur_pos) const
+		void expanded_draw(points::position pic_pos, points::window4 cur_pos) const
 		{
 			cur_pos.screen_check();
 			ferruscpp::console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
@@ -559,17 +562,17 @@ namespace ferruscpp
 				}
 			}
 		}
-		void expanded_draw(window4 cur_pos) const
+		void expanded_draw(points::window4 cur_pos) const
 		{
 			expanded_draw({ 0, 0 }, cur_pos);
 		}
-		void expanded_draw(position right_down_angle) const
+		void expanded_draw(points::position right_down_angle) const
 		{
-			window4 cur_pos((position)ferruscpp::console::get_cursor_pos(), right_down_angle);
+			points::window4 cur_pos((points::position)ferruscpp::console::get_cursor_pos(), right_down_angle);
 			expanded_draw(cur_pos);
 		}
 		//
-		T& get_pixel(position pic_pos)
+		T& get_pixel(points::position pic_pos)
 		{
 			check_picture_position(pic_pos);
 			return *(pixel_table[pic_pos.x][pic_pos.y]);
@@ -632,8 +635,8 @@ namespace ferruscpp
 	private:
 		T* picture;
 		uint32_t delay;//in milliseconds
-		position pic_pos;
-		window4 cur_pos;
+		points::position pic_pos;
+		points::window4 cur_pos;
 		uint32_t time;
 		//
 		std::string folder_name = "./Rolls";
@@ -649,13 +652,13 @@ namespace ferruscpp
 		{
 			download();
 		}
-		Roll(std::string name_, std::string picture_name, uint32_t delay_, position pic_pos_, window4 cur_pos_, uint32_t time_)
+		Roll(std::string name_, std::string picture_name, uint32_t delay_, points::position pic_pos_, points::window4 cur_pos_, uint32_t time_)
 			: name(name_), picture(new T(picture_name)), delay(delay_), pic_pos(pic_pos_), cur_pos(cur_pos_), time(time_)
 		{
 			update_path(*this);
 			upload();
 		}
-		Roll(std::string name_, std::string picture_name, size_t delay_, size_t time_) : Roll(name_, picture_name, delay_, position(), window4(), time_)
+		Roll(std::string name_, std::string picture_name, size_t delay_, size_t time_) : Roll(name_, picture_name, delay_, points::position(), points::window4(), time_)
 		{
 
 		}
@@ -664,11 +667,11 @@ namespace ferruscpp
 		{
 			delay = new_delay;
 		}
-		void set_pic_pos(position new_pic_pos)
+		void set_pic_pos(points::position new_pic_pos)
 		{
 			pic_pos = new_pic_pos;
 		}
-		void set_cur_pos(window4 new_cur_pos)
+		void set_cur_pos(points::window4 new_cur_pos)
 		{
 			cur_pos = new_cur_pos;
 		}
@@ -681,11 +684,11 @@ namespace ferruscpp
 		{
 			return delay;
 		}
-		position& get_pic_pos() const
+		points::position& get_pic_pos() const
 		{
 			return pic_pos;
 		}
-		window4& get_cur_pos() const
+		points::window4& get_cur_pos() const
 		{
 			return cur_pos;
 		}
