@@ -84,9 +84,12 @@ namespace ferruscpp
 			c16 get_background_basic_color() const;
 
 			friend void check_position(int x, int y);
+			friend bool is_in_screen(int x, int y);
 		};
 
 		void check_position(int x, int y);
+
+		bool is_in_screen(int x, int y);
 
 		std::pair<size_t, size_t> get_right_down_angle();
 

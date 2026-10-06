@@ -168,6 +168,19 @@ namespace ferruscpp
 			}
 		}
 
+		bool is_in_screen(int x, int y)
+		{
+			if (x < sc_->bottom_x || sc_->top_x < x)
+			{
+				return false;
+			}
+			if (y < sc_->bottom_y || sc_->top_y < y)
+			{
+				return false;
+			}
+			return true;
+		}
+
 		Screen_Controller* sc_;
 
 		std::pair<size_t, size_t> get_right_down_angle()
@@ -551,7 +564,7 @@ namespace ferruscpp
 			}
 			else
 			{
-				f_command += std::to_string(90 + (int)f_color.color);
+				f_command += std::to_string(90 + (int)f_color.color - 8);
 			}
 			f_command += 'm';
 			putstr_(f_command);
@@ -562,7 +575,7 @@ namespace ferruscpp
 			}
 			else
 			{
-				b_command += std::to_string(100 + (int)b_color.color);
+				b_command += std::to_string(100 + (int)b_color.color - 8);
 			}
 			b_command += 'm';
 			putstr_(b_command);

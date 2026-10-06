@@ -225,11 +225,11 @@ namespace ferruscpp
 			char symbol;
 			console::c16 foreground, background;
 		public:
-			Console_Pixel_16()
+			Console_Pixel_16() : symbol(' '), foreground(console::get_foreground_basic_color()), background(console::get_background_basic_color())
 			{
 
 			}
-			Console_Pixel_16(char symbol_, console::c16 foreground_, console::c16 background_) : symbol(' '), foreground(console::get_foreground_basic_color()), background(console::get_background_basic_color())
+			Console_Pixel_16(char symbol_, console::c16 foreground_, console::c16 background_) : symbol(symbol_), foreground(foreground_), background(background_)
 			{
 
 			}
@@ -510,7 +510,7 @@ namespace ferruscpp
 		{
 			update_pixel_size();
 			files::update_path(*this);
-			build_file(*this);
+			files::build_file(*this);
 			build_pixel_table();
 		}
 		//
@@ -579,6 +579,18 @@ namespace ferruscpp
 			expanded_draw(cur_pos);
 		}
 		//
+		bool is_in_picture(points::position pic_pos) const
+		{
+			if (pic_pos.x < 0 || size_x <= pic_pos.x)
+			{
+				return false;
+			}
+			if (pic_pos.y < 0 || size_y <= pic_pos.y)
+			{
+				return false;
+			}
+			return true;
+		}
 		T& get_pixel(points::position pic_pos)
 		{
 			check_picture_position(pic_pos);
