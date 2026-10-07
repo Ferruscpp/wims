@@ -6,8 +6,43 @@ using namespace ferruscpp;
 
 namespace ferruscpp
 {
+	namespace io
+	{
+		void print_colored_line(size_t y, colors::c16 background_color)
+		{
+			colors::set_color_16(background_color, background_color);
+			cursor::set_cursor_pos(0, y);
+			size_t max_x = screen::get_right_down_angle().first;
+			std::string line;
+			for (size_t x = 0; x < max_x; ++x)
+			{
+				line += ' ';
+			}
+			io::putstr_(line);
+		}
+
+		void read_and_write(std::string& line)
+		{
+			char ch = io::getch_();
+			while (ch != '\n' && ch != '\r')
+			{
+				line += ch;
+				io::putstr_(std::string() + ch);
+				ch = io::getch_();
+			}
+		}
+	}
+
 	namespace wims
 	{
+		template<typename Picture_>
+		void draw_picture(const Picture_& picture, const std::pair<size_t, size_t>& pixel_size)
+		{
+			picture.draw(points::position(0, 0));
+			cursor::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
+			colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
+		}
+
 		enum direction
 		{
 			up,
@@ -35,25 +70,58 @@ namespace ferruscpp
 			return false;
 		}
 
+		void open_console_mode(const std::pair<size_t, size_t>& screen_size)
+		{
+			io::print_colored_line(screen_size.second - 2, colors::c16(15));
+			io::print_colored_line(screen_size.second - 1, colors::c16(0));
+			cursor::set_cursor_pos(0, screen_size.second - 1);
+			colors::set_color_16(colors::c16(15), colors::c16(0));
+		}
+		void close_console_mode(const std::pair<size_t, size_t>& screen_size)
+		{
+			io::print_colored_line(screen_size.second - 2, colors::c16(0));
+			io::print_colored_line(screen_size.second - 1, colors::c16(0));
+		}
+
 		template<typename picture_type>
 		void start(picture_type& picture)
 		{
 			std::pair<size_t, size_t> pixel_size = picture.get_pixel_size();
-			picture.draw();
-			cursor::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
-			colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
+			std::pair<size_t, size_t> screen_size = screen::get_right_down_angle();
+			draw_picture(picture, pixel_size);
 			enum wims_mode
 			{
 				move,
 				write,
 			};
 			wims_mode mode = wims_mode::move;
+			char ch;
 			while (true)
 			{
-				char ch = io::getch_();
-				if (ch == '\033')//парсинг комманд 
+				ch = io::getch_();
+				if (ch == 27)//need to switch modes
 				{
-
+					open_console_mode(screen_size);
+					ch = io::getch_();
+					while (ch != 27)
+					{
+						open_console_mode(screen_size);
+						if (ch == ':')
+						{
+							io::putstr_(":");
+							std::string command;
+							io::read_and_write(command);
+							//надо парсить команды
+							open_console_mode(screen_size);
+						}
+						else
+						{
+							io::putstr_("[ESC]");
+						}
+						ch = io::getch_();
+					}
+					close_console_mode(screen_size);
+					draw_picture(picture, pixel_size);
 				}
 				if (mode == wims_mode::move)
 				{
