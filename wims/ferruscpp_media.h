@@ -274,41 +274,40 @@ namespace ferruscpp
 			}
 		};
 
-		template<typename T>
-		class Pixel
+		template<typename Pixel_>
+		class Double_Pixel : public Pixel_
 		{
 		public:
-			T pixel;
-			Pixel() : pixel(' ', console::get_foreground_basic_color(), console::get_background_basic_color())
+			Double_Pixel() : Pixel_(' ', console::get_foreground_basic_color(), console::get_background_basic_color())
 			{
 
 			}
-			Pixel(T pixel_) : pixel(pixel_)
+			Double_Pixel(Pixel_ pixel_) : Pixel_(pixel_)
 			{
 
 			}
 			void draw() const
 			{
-				pixel.draw();
-				pixel.draw();
+				Pixel_::draw();
+				Pixel_::draw();
 			}
 			static std::pair<size_t, size_t> get_size()
 			{
-				std::pair<size_t, size_t> answer(T::get_size());
+				std::pair<size_t, size_t> answer(Pixel_::get_size());
 				answer.first *= 2;
 				return answer;
 			}
-			friend std::istream& operator>>(std::istream& in, Pixel& pixel)
+			friend std::istream& operator>>(std::istream& in, Double_Pixel& pixel)
 			{
-				in >> pixel.pixel;
+				in >> static_cast<Pixel_&>(pixel);
 				return in;
 			}
-			friend std::ostream& operator<<(std::ostream& out, const Pixel& pixel)
+			friend std::ostream& operator<<(std::ostream& out, const Double_Pixel& pixel)
 			{
-				out << pixel.pixel;
+				out << static_cast<const Pixel_&>(pixel);
 				return out;
 			}
-			~Pixel()
+			~Double_Pixel()
 			{
 
 			}
@@ -590,6 +589,10 @@ namespace ferruscpp
 				return false;
 			}
 			return true;
+		}
+		const std::pair<size_t, size_t> get_pixel_size() const
+		{
+			return pixel_size;
 		}
 		T& get_pixel(points::position pic_pos)
 		{

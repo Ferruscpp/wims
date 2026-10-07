@@ -9,77 +9,71 @@ namespace ferruscpp
 {
 	namespace wims
 	{
-		template<typename picture_type>
-		void move_up(picture_type& picture)
+		enum direction
 		{
-			auto cur_pos = console::get_cursor_pos();
-			--cur_pos.second;
-			if (picture.is_in_picture({ cur_pos.first, cur_pos.second }))
-			{
-				console::set_cursor_pos(cur_pos.first, cur_pos.second);
-			}
-		}
+			up,
+			down,
+			left,
+			right
+		};
 
 		template<typename picture_type>
-		void move_left(picture_type& picture)
+		bool move_cursor(const picture_type& picture, const std::pair<size_t, size_t>& pixel_size, const direction& d)
 		{
 			auto cur_pos = console::get_cursor_pos();
-			--cur_pos.first;
-			if (picture.is_in_picture({ cur_pos.first, cur_pos.second }))
+			switch (d)
+			{
+			case direction::up: cur_pos.second -= pixel_size.second; break;
+			case direction::down: cur_pos.second += pixel_size.second; break;
+			case direction::left: cur_pos.first -= pixel_size.first; break;
+			case direction::right: cur_pos.first += pixel_size.first; break;
+			}
+			if (picture.is_in_picture({ cur_pos.first / pixel_size.first, cur_pos.second / pixel_size.second}))
 			{
 				console::set_cursor_pos(cur_pos.first, cur_pos.second);
+				return true;
 			}
-		}
-
-		template<typename picture_type>
-		void move_down(picture_type& picture)
-		{
-			auto cur_pos = console::get_cursor_pos();
-			++cur_pos.second;
-			if (picture.is_in_picture({ cur_pos.first, cur_pos.second }))
-			{
-				console::set_cursor_pos(cur_pos.first, cur_pos.second);
-			}
-		}
-
-		template<typename picture_type>
-		void move_right(picture_type& picture)
-		{
-			auto cur_pos = console::get_cursor_pos();
-			++cur_pos.first;
-			if (picture.is_in_picture({ cur_pos.first, cur_pos.second }))
-			{
-				console::set_cursor_pos(cur_pos.first, cur_pos.second);
-			}
+			return false;
 		}
 
 		template<typename picture_type>
 		void start(picture_type& picture)
 		{
+			std::pair<size_t, size_t> pixel_size = picture.get_pixel_size();
 			picture.draw();
+			console::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
 			console::set_color_16(console::get_foreground_basic_color(), console::get_background_basic_color());
+			enum wims_mode
+			{
+				move,
+				write,
+			};
+			wims_mode mode = wims_mode::move;
 			while (true)
 			{
 				char ch = console::getch_();
-				if (ch == '\033')// парсинг комманд 
+				if (ch == '\033')//парсинг комманд 
 				{
 
 				}
-				if (ch == 'w' || ch == 'W')
+				if (mode == wims_mode::move)
 				{
-					move_up(picture);
-				}
-				if (ch == 'a' || ch == 'A')
-				{
-					move_left(picture);
-				}
-				if (ch == 's' || ch == 'S')
-				{
-					move_down(picture);
-				}
-				if (ch == 'd' || ch == 'D')
-				{
-					move_right(picture);
+					if (ch == 'w' || ch == 'W')//up
+					{
+						move_cursor(picture, pixel_size, direction::up);
+					}
+					if (ch == 'a' || ch == 'A')//left
+					{
+						move_cursor(picture, pixel_size, direction::left);
+					}
+					if (ch == 's' || ch == 'S')//down
+					{
+						move_cursor(picture, pixel_size, direction::down);
+					}
+					if (ch == 'd' || ch == 'D')//right
+					{
+						move_cursor(picture, pixel_size, direction::right);
+					}
 				}
 			}
 		}
@@ -106,7 +100,7 @@ int main(int argc, char* argv[])
 			std::string name = argv[argc - 1];
 			bool need_create = false;
 			size_t width = 40, height = 40;
-			bool use_Pixel = false;//true if use Pixel
+			bool use_Double_Pixel = false;//true if use Double_Pixel
 			size_t pixel_type = 0;// 0 - 16 colors, 1 - 8 bit, 3 - rgb
 			for (int i = 1; i < argc - 1; i++)
 			{
@@ -133,7 +127,7 @@ int main(int argc, char* argv[])
 				}
 				else if (arg == "-d" || arg == "--double")
 				{
-					use_Pixel = true;
+					use_Double_Pixel = true;
 				}
 				else if (arg == "-rgb" || arg == "-8bit" || arg == "-16")
 				{
@@ -157,43 +151,22 @@ int main(int argc, char* argv[])
 				}
 			}
 			//
-			if (use_Pixel)
+			if (use_Double_Pixel)
 			{
 				switch (pixel_type)
 				{
 				case 0:
 					if (need_create)
 					{
-						Picture<Pixel<Console_Pixel_16>> a(name, width, height);
+						Picture<Double_Pixel<Console_Pixel_16>> a(name, width, height);
 						wims::start(a);
 					}
 					else
 					{
-						Picture<Pixel<Console_Pixel_16>> a(name);
+						Picture<Double_Pixel<Console_Pixel_16>> a(name);
 						wims::start(a);
 					}
-				/*case 1:
-					if (need_create)
-					{
-						Picture<Pixel<Console_Pixel_8bit>> a(name, width, height);
-						wims::start(a);
-					}
-					else
-					{
-						Picture<Pixel<Console_Pixel_8bit>> a(name);
-						wims::start(a);
-					}
-				case 2:
-					if (need_create)
-					{
-						Picture<Pixel<Console_Pixel_rgb>> a(name, width, height);
-						wims::start(a);
-					}
-					else
-					{
-						Picture<Pixel<Console_Pixel_rgb>> a(name);
-						wims::start(a);
-					}*/
+					break;
 				default:
 					console::putstr_("Error! Wrong flags using!");
 					std::exit(1);
@@ -214,28 +187,7 @@ int main(int argc, char* argv[])
 						Picture<Console_Pixel_16> a(name);
 						wims::start(a);
 					}
-				/*case 1:
-					if (need_create)
-					{
-						Picture<Console_Pixel_8bit> a(name, width, height);
-						wims::start(a);
-					}
-					else
-					{
-						Picture<Console_Pixel_8bit> a(name);
-						wims::start(a);
-					}
-				case 2:
-					if (need_create)
-					{
-						Picture<Console_Pixel_rgb> a(name, width, height);
-						wims::start(a);
-					}
-					else
-					{
-						Picture<Console_Pixel_rgb> a(name);
-						wims::start(a);
-					}*/
+					break;
 				default:
 					console::putstr_("Error! Wrong flags using!");
 					std::exit(1);
