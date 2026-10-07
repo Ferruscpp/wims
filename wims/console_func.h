@@ -28,7 +28,26 @@
 
 namespace ferruscpp
 {
-	namespace console
+	namespace screen
+	{
+		void check_position(int x, int y);
+
+		bool is_in_screen(int x, int y);
+
+		std::pair<size_t, size_t> get_right_down_angle();
+
+		void open_new_screen();
+
+		void close_screen();
+
+		void clear_screen();
+
+		void switch_to_big_screen();
+
+		void switch_to_small_screen();
+	}
+
+	namespace colors
 	{
 		//cRGB
 		struct crgb
@@ -61,6 +80,21 @@ namespace ferruscpp
 			friend std::ostream& operator<<(std::ostream& out, const c16& color);
 		};
 
+		//set colors
+		void set_color_rgb(crgb f_color, crgb b_color);
+
+		void set_color_8bit(c8bit f_color, c8bit b_color);
+
+		void set_color_16(c16 f_color, c16 b_color);
+
+		//get basic colors
+		c16 get_foreground_basic_color();
+
+		c16 get_background_basic_color();
+	}
+
+	namespace details
+	{
 		class Screen_Controller
 		{
 		private:
@@ -68,10 +102,10 @@ namespace ferruscpp
 			int top_x = 201;
 			int bottom_y = 0;
 			int top_y = 51;
-			c16 foreground_basic = 15;
-			c16 background_basic = 0;
+			colors::c16 foreground_basic = 15;
+			colors::c16 background_basic = 0;
 		public:
-			Screen_Controller();
+			Screen_Controller() = default;
 
 			void switch_to_small();
 
@@ -79,40 +113,24 @@ namespace ferruscpp
 
 			std::pair<size_t, size_t> get_right_down_angle() const;
 
-			c16 get_foreground_basic_color() const;
+			colors::c16 get_foreground_basic_color() const;
 
-			c16 get_background_basic_color() const;
+			colors::c16 get_background_basic_color() const;
 
-			friend void check_position(int x, int y);
-			friend bool is_in_screen(int x, int y);
+			friend void screen::check_position(int x, int y);
+			friend bool screen::is_in_screen(int x, int y);
 		};
-
-		void check_position(int x, int y);
-
-		bool is_in_screen(int x, int y);
-
-		std::pair<size_t, size_t> get_right_down_angle();
-
-		c16 get_foreground_basic_color();
-
-		c16 get_background_basic_color();
 
 		extern Screen_Controller* sc_;
 
-		void start_for_all_OS();
-		void end_for_all_OS();
-
 #if _WIN32
-		//-----------------------------------------------------
 		class Terminal_Controller
 		{
 		public:
-			Terminal_Controller();
-			~Terminal_Controller();
+			Terminal_Controller() = default;
+			~Terminal_Controller() = default;
 		};
-		//-----------------------------------------------------
 #elif __linux__
-		//-----------------------------------------------------
 		class Terminal_Controller
 		{
 		private:
@@ -123,45 +141,21 @@ namespace ferruscpp
 			static int get_info();
 			~Terminal_Controller();
 		};
-		//-----------------------------------------------------
-		class Not_Init_Console_Error : public std::exception
-		{
-		private:
-			std::string message = "Error: console can be crashed!!!";
-		public:
-			Not_Init_Console_Error();
-			const char* what() const noexcept override;
-		};
-		//-----------------------------------------------------
+
 		extern Terminal_Controller* tc_;
-		//-----------------------------------------------------
 #else
 #error "Unknown OS"
 #endif
+	}
 
-		int putstr_(std::string str);
-		//-----------------------------------------------------
-		int getch_();
-		//-----------------------------------------------------
-		bool is_hit_();
-		//-----------------------------------------------------
-		void wait(size_t milliseconds);
-		//-----------------------------------------------------
-		void create_folder(std::string folder);
-		//-----------------------------------------------------
-		void clear_in_buffer();
-		//-----------------------------------------------------
-		void init_console_func();
-		//-----------------------------------------------------
-		void end_of_work_console_func();
-
-
+	namespace exceptions
+	{
 		class Screen_Exception : public std::exception
 		{
 		private:
 			std::string massage = "Error: exite out of screen!!!";
 		public:
-			Screen_Exception();
+			Screen_Exception() = default;
 			const char* what() const noexcept override;
 		};
 
@@ -170,11 +164,60 @@ namespace ferruscpp
 		private:
 			std::string massage = "Error: ANSI doesn't supported in this console!!!";
 		public:
-			ANSI_Doesnt_Supported_Exception();
+			ANSI_Doesnt_Supported_Exception() = default;
 			const char* what() const noexcept override;
 		};
 
-		//cursor position
+		class Color_Exception : public std::exception
+		{
+		private:
+			std::string massage = "Error: color convertation error!!!";
+		public:
+			Color_Exception() = default;
+			const char* what() const noexcept override;
+		};
+
+#if __linux__
+		class Not_Init_Console_Error : public std::exception
+		{
+		private:
+			std::string message = "Error: console can be crashed!!!";
+		public:
+			Not_Init_Console_Error() = default;
+			const char* what() const noexcept override;
+		};
+#endif
+	}
+
+	namespace io
+	{
+		int putstr_(std::string str);
+		
+		int getch_();
+		
+		bool is_hit_();
+
+		void clear_in_buffer();
+	}
+
+	namespace files
+	{
+		void create_folder(std::string folder);
+	}
+
+	namespace console
+	{
+		void start_for_all_OS();
+		void end_for_all_OS();
+
+		void init_console_func();
+		void end_of_work_console_func();
+
+		void wait(size_t milliseconds);
+	}
+
+	namespace cursor
+	{
 		std::pair<size_t, size_t> get_cursor_pos();
 
 		size_t get_cursor_x();
@@ -182,33 +225,5 @@ namespace ferruscpp
 		size_t get_cursor_y();
 
 		void set_cursor_pos(size_t x, size_t y);
-
-		//screen
-		void open_new_screen();
-
-		void close_screen();
-
-		void clear_screen();
-
-		void switch_to_big_screen();
-
-		void switch_to_small_screen();
-
-		//Color_Exception
-		class Color_Exception : public std::exception
-		{
-		private:
-			std::string massage = "Error: color convertation error!!!";
-		public:
-			Color_Exception();
-			const char* what() const noexcept override;
-		};
-
-		//set colors
-		void set_color_rgb(crgb f_color, crgb b_color);
-
-		void set_color_8bit(c8bit f_color, c8bit b_color);
-
-		void set_color_16(c16 f_color, c16 b_color);
 	}
 }

@@ -3,7 +3,6 @@
 #pragma comment(linker, "/STACK:16777216")
 using namespace std;
 using namespace ferruscpp;
-using namespace ferruscpp::pixels;
 
 namespace ferruscpp
 {
@@ -20,7 +19,7 @@ namespace ferruscpp
 		template<typename picture_type>
 		bool move_cursor(const picture_type& picture, const std::pair<size_t, size_t>& pixel_size, const direction& d)
 		{
-			auto cur_pos = console::get_cursor_pos();
+			auto cur_pos = cursor::get_cursor_pos();
 			switch (d)
 			{
 			case direction::up: cur_pos.second -= pixel_size.second; break;
@@ -30,7 +29,7 @@ namespace ferruscpp
 			}
 			if (picture.is_in_picture({ cur_pos.first / pixel_size.first, cur_pos.second / pixel_size.second}))
 			{
-				console::set_cursor_pos(cur_pos.first, cur_pos.second);
+				cursor::set_cursor_pos(cur_pos.first, cur_pos.second);
 				return true;
 			}
 			return false;
@@ -41,8 +40,8 @@ namespace ferruscpp
 		{
 			std::pair<size_t, size_t> pixel_size = picture.get_pixel_size();
 			picture.draw();
-			console::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
-			console::set_color_16(console::get_foreground_basic_color(), console::get_background_basic_color());
+			cursor::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
+			colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
 			enum wims_mode
 			{
 				move,
@@ -51,7 +50,7 @@ namespace ferruscpp
 			wims_mode mode = wims_mode::move;
 			while (true)
 			{
-				char ch = console::getch_();
+				char ch = io::getch_();
 				if (ch == '\033')//парсинг комманд 
 				{
 
@@ -83,15 +82,15 @@ namespace ferruscpp
 int main(int argc, char* argv[])
 {
 	console::init_console_func();
-	while (!console::is_hit_())
+	while (!io::is_hit_())
 	{
 
 	}
-	console::clear_in_buffer();
+	io::clear_in_buffer();
 	//
 	if (argc == 1)
 	{
-		cout << "Hello, I'm builder of wims";
+		io::putstr_("Hello, I'm builder of wims");
 	}
 	else
 	{
@@ -109,7 +108,7 @@ int main(int argc, char* argv[])
 				{
 					if (argc - 1 == i + 1)
 					{
-						console::putstr_("Error! Wrong flags using!");
+						io::putstr_("Error! Wrong flags using!");
 						std::exit(1);
 					}
 					width = (size_t)std::stoi(argv[++i]);
@@ -119,7 +118,7 @@ int main(int argc, char* argv[])
 				{
 					if (argc - 1 == i + 1)
 					{
-						console::putstr_("Error! Wrong flags using!");
+						io::putstr_("Error! Wrong flags using!");
 						std::exit(1);
 					}
 					height = (size_t)std::stoi(argv[++i]);
@@ -146,8 +145,8 @@ int main(int argc, char* argv[])
 				}
 				else
 				{
-					console::putstr_("Error! Wrong flags using!");
-					std::exit(1);
+					io::putstr_("Error! Wrong flags using!");
+					return 1;
 				}
 			}
 			//
@@ -158,18 +157,18 @@ int main(int argc, char* argv[])
 				case 0:
 					if (need_create)
 					{
-						Picture<Double_Pixel<Console_Pixel_16>> a(name, width, height);
+						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name, width, height);
 						wims::start(a);
 					}
 					else
 					{
-						Picture<Double_Pixel<Console_Pixel_16>> a(name);
+						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name);
 						wims::start(a);
 					}
 					break;
 				default:
-					console::putstr_("Error! Wrong flags using!");
-					std::exit(1);
+					io::putstr_("Error! Wrong flags using!");
+					return 1;
 				}
 			}
 			else
@@ -179,24 +178,24 @@ int main(int argc, char* argv[])
 				case 0:
 					if (need_create)
 					{
-						Picture<Console_Pixel_16> a(name, width, height);
+						Picture<pixels::Console_Pixel_16> a(name, width, height);
 						wims::start(a);
 					}
 					else
 					{
-						Picture<Console_Pixel_16> a(name);
+						Picture<pixels::Console_Pixel_16> a(name);
 						wims::start(a);
 					}
 					break;
 				default:
-					console::putstr_("Error! Wrong flags using!");
-					std::exit(1);
+					io::putstr_("Error! Wrong flags using!");
+					return 1;
 				}
 			}
 		}
 		catch (std::exception& ex)
 		{
-			console::putstr_(ex.what());
+			io::putstr_(ex.what());
 		}
 	}
 	//

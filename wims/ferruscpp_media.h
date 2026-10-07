@@ -7,14 +7,17 @@
 
 namespace ferruscpp
 {
-	
-	void scan_raw(std::istream& in, uint32_t& value)
+	namespace io
 	{
-		in.read(reinterpret_cast<char*>(&value), sizeof(value));
-	}
-	void print_raw(std::ostream& out, const uint32_t& value)
-	{
-		out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+		void scan_raw(std::istream& in, uint32_t& value)
+		{
+			in.read(reinterpret_cast<char*>(&value), sizeof(value));
+		}
+		void print_raw(std::ostream& out, const uint32_t& value)
+		{
+			out.write(reinterpret_cast<const char*>(&value), sizeof(value));
+		}
+
 	}
 
 	namespace exceptions
@@ -24,10 +27,7 @@ namespace ferruscpp
 		private:
 			std::string massage = "Error: file not found!!!";
 		public:
-			File_Not_Found_Exception()
-			{
-
-			}
+			File_Not_Found_Exception() = default;
 
 			const char* what() const noexcept override
 			{
@@ -40,10 +40,7 @@ namespace ferruscpp
 		private:
 			std::string massage = "Error: can't remove file!!!";
 		public:
-			Cant_Remove_File_Exception()
-			{
-
-			}
+			Cant_Remove_File_Exception() = default;
 
 			const char* what() const noexcept override
 			{
@@ -56,10 +53,7 @@ namespace ferruscpp
 		private:
 			std::string massage = "Error: can't download file!!!";
 		public:
-			Download_Exception()
-			{
-
-			}
+			Download_Exception() = default;
 
 			const char* what() const noexcept override
 			{
@@ -72,10 +66,8 @@ namespace ferruscpp
 		private:
 			std::string message = "Error: wrong file name or folder path!!!";
 		public:
-			File_Name_Exception()
-			{
+			File_Name_Exception() = default;
 
-			}
 			const char* what() const noexcept override
 			{
 				return message.c_str();
@@ -109,14 +101,14 @@ namespace ferruscpp
 			//
 			friend std::istream& operator>>(std::istream& in, position& pos)
 			{
-				scan_raw(in, pos.x);
-				scan_raw(in, pos.y);
+				io::scan_raw(in, pos.x);
+				io::scan_raw(in, pos.y);
 				return in;
 			}
 			friend std::ofstream& operator<<(std::ofstream& out, const position& pos)
 			{
-				print_raw(out, pos.x);
-				print_raw(out, pos.y);
+				io::print_raw(out, pos.x);
+				io::print_raw(out, pos.y);
 				return out;
 			}
 			//
@@ -132,17 +124,14 @@ namespace ferruscpp
 
 		struct window4
 		{
-			uint32_t x1 = 0, y1 = 0, x2 = console::get_right_down_angle().first, y2 = console::get_right_down_angle().second;
+			uint32_t x1 = 0, y1 = 0, x2 = screen::get_right_down_angle().first, y2 = screen::get_right_down_angle().second;
 		private:
 			class Window_Exception : std::exception
 			{
 			private:
 				std::string massage = "Error: wrong angle position!!!";
 			public:
-				Window_Exception()
-				{
-
-				}
+				Window_Exception() = default;
 
 				const char* what() const noexcept override
 				{
@@ -176,6 +165,7 @@ namespace ferruscpp
 			//
 			friend std::istream& operator>>(std::istream& in, window4& window)
 			{
+				using namespace io;
 				scan_raw(in, window.x1);
 				scan_raw(in, window.y1);
 				scan_raw(in, window.x2);
@@ -184,6 +174,7 @@ namespace ferruscpp
 			}
 			friend std::ofstream& operator<<(std::ofstream& out, const window4& window)
 			{
+				using namespace io;
 				print_raw(out, window.x1);
 				print_raw(out, window.y1);
 				print_raw(out, window.x2);
@@ -193,8 +184,8 @@ namespace ferruscpp
 			//
 			void screen_check() const
 			{
-				console::check_position(x1, y1);
-				console::check_position(x2, y2);
+				screen::check_position(x1, y1);
+				screen::check_position(x2, y2);
 			}
 		};
 	}
@@ -223,33 +214,33 @@ namespace ferruscpp
 		{
 		private:
 			char symbol;
-			console::c16 foreground, background;
+			colors::c16 foreground, background;
 		public:
-			Console_Pixel_16() : symbol(' '), foreground(console::get_foreground_basic_color()), background(console::get_background_basic_color())
+			Console_Pixel_16() : symbol(' '), foreground(colors::get_foreground_basic_color()), background(colors::get_background_basic_color())
 			{
 
 			}
-			Console_Pixel_16(char symbol_, console::c16 foreground_, console::c16 background_) : symbol(symbol_), foreground(foreground_), background(background_)
+			Console_Pixel_16(char symbol_, colors::c16 foreground_, colors::c16 background_) : symbol(symbol_), foreground(foreground_), background(background_)
 			{
 
 			}
 			void draw() const
 			{
-				set_color_16(foreground, background);
+				colors::set_color_16(foreground, background);
 				std::string h;
 				h += symbol;
-				console::putstr_(h);
+				io::putstr_(h);
 			}
 			void set(char symbol_)
 			{
 				symbol = symbol_;
 			}
-			void set(console::c16 foreground_, console::c16 background_)
+			void set(colors::c16 foreground_, colors::c16 background_)
 			{
 				foreground = foreground_;
 				background = background_;
 			}
-			void set(char symbol_, console::c16 foreground_, console::c16 background_)
+			void set(char symbol_, colors::c16 foreground_, colors::c16 background_)
 			{
 				symbol = symbol_;
 				foreground = foreground_;
@@ -278,7 +269,7 @@ namespace ferruscpp
 		class Double_Pixel : public Pixel_
 		{
 		public:
-			Double_Pixel() : Pixel_(' ', console::get_foreground_basic_color(), console::get_background_basic_color())
+			Double_Pixel() : Pixel_(' ', colors::get_foreground_basic_color(), colors::get_background_basic_color())
 			{
 
 			}
@@ -427,7 +418,7 @@ namespace ferruscpp
 		template<typename O>
 		void change_folder(O& object, std::string new_folder)
 		{
-			console::create_folder(new_folder);
+			files::create_folder(new_folder);
 			remove(object);
 			object.folder_name = new_folder;
 			object.upload();
@@ -518,7 +509,7 @@ namespace ferruscpp
 			check_picture_position(pic_pos);
 			cur_pos.screen_check();
 			check_picture_position({ pic_pos.x + (cur_pos.x2 - cur_pos.x1) / pixel_size.x, pic_pos.y + (cur_pos.y2 - cur_pos.y1) / pixel_size.y });
-			console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
+			cursor::set_cursor_pos(cur_pos.x1, cur_pos.y1);
 			//y is position in picture
 			for (size_t y = pic_pos.y; (y - pic_pos.y) * pixel_size.y + cur_pos.y1 <= cur_pos.y2; ++y)
 			{
@@ -529,13 +520,13 @@ namespace ferruscpp
 				size_t next_position_in_console_y = (y - pic_pos.y + 1) * pixel_size.y + cur_pos.y1;
 				if (next_position_in_console_y <= cur_pos.y2)
 				{
-					console::set_cursor_pos(cur_pos.x1, next_position_in_console_y);
+					cursor::set_cursor_pos(cur_pos.x1, next_position_in_console_y);
 				}
 			}
 		}
 		void draw_from(points::position pic_pos) const
 		{
-			points::position cur_pos(console::get_cursor_pos());
+			points::position cur_pos(cursor::get_cursor_pos());
 			points::position sec_cur_pos(cur_pos.x + (size_x - pic_pos.x) * pixel_size.x - 1, cur_pos.y + (size_y - pic_pos.y) * pixel_size.y - 1);
 			points::window4 window(cur_pos, sec_cur_pos);
 			seg_draw(pic_pos, window);
@@ -546,13 +537,13 @@ namespace ferruscpp
 		}
 		void draw() const
 		{
-			draw((points::position)console::get_cursor_pos());
+			draw((points::position)cursor::get_cursor_pos());
 		}
 		//
 		void expanded_draw(points::position pic_pos, points::window4 cur_pos) const
 		{
 			cur_pos.screen_check();
-			console::set_cursor_pos(cur_pos.x1, cur_pos.y1);
+			cursor::set_cursor_pos(cur_pos.x1, cur_pos.y1);
 			pic_pos.x %= size_x;
 			pic_pos.y %= size_y;
 			for (size_t y = pic_pos.y, pos_y = cur_pos.y1; pos_y <= cur_pos.y2; y = (y + 1) % size_y, pos_y += pixel_size.y)
@@ -574,7 +565,7 @@ namespace ferruscpp
 		}
 		void expanded_draw(points::position right_down_angle) const
 		{
-			points::window4 cur_pos((points::position)console::get_cursor_pos(), right_down_angle);
+			points::window4 cur_pos((points::position)cursor::get_cursor_pos(), right_down_angle);
 			expanded_draw(cur_pos);
 		}
 		//
@@ -607,8 +598,8 @@ namespace ferruscpp
 			{
 				throw exceptions::File_Not_Found_Exception();
 			}
-			scan_raw(in, size_x);
-			scan_raw(in, size_y);
+			io::scan_raw(in, size_x);
+			io::scan_raw(in, size_y);
 			for (size_t y = 0; y < size_y; ++y)
 			{
 				for (size_t x = 0; x < size_x; ++x)
@@ -621,8 +612,8 @@ namespace ferruscpp
 		void upload() const
 		{
 			std::ofstream out(files::get_file_name(*this));
-			print_raw(out, size_x);
-			print_raw(out, size_y);
+			io::print_raw(out, size_x);
+			io::print_raw(out, size_y);
 			for (size_t y = 0; y < size_y; ++y)
 			{
 				for (size_t x = 0; x < size_x; ++x)
