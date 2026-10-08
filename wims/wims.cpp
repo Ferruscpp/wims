@@ -6,6 +6,126 @@ using namespace ferruscpp;
 
 namespace ferruscpp
 {
+	namespace wims_src
+	{
+		enum wims_mode
+		{
+			move,
+			write,
+			draw,
+			pixel_select,
+			text_select
+		};
+
+		enum direction
+		{
+			up,
+			down,
+			left,
+			right
+		};
+	}
+
+	namespace symbols
+	{
+		bool is_normal_symbol(const char& ch)
+		{
+			return 32 <= ch && ch <= 126;
+		}
+
+		bool is_enter(const char& ch)
+		{
+			return ch == '\n' || ch == '\r';
+		}
+
+		bool is_backspace(const char& ch)
+		{
+#if _WIN32
+			if (ch == -32 || ch == 224)
+			{
+				char ch_ = io::getch_();
+				return ch == 83;
+			}
+#elif __linux__
+			return ch == '\x7c'
+#endif
+		}
+
+		char is_arrow(const char& ch, wims_src::direction*& d)
+		{
+			using namespace wims_src;
+#if _WIN32
+			if (ch == -32 || ch == 224)
+			{
+				if (!io::is_hit_())
+				{
+					return 0;
+				}
+				char ch_ = io::getch_();
+				if (ch_ == 72)
+				{
+					d = new direction(direction::up);
+				}
+				else if (ch_ == 75)
+				{
+					d = new direction(direction::left);
+				}
+				else if (ch_ == 80)
+				{
+					d = new direction(direction::down);
+				}
+				else if (ch_ == 77)
+				{
+					d = new direction(direction::right);
+				}
+				else
+				{
+					return ch_;
+				}
+			}
+			return 0;
+#elif __linux__
+			if (ch == 27)
+			{
+				if (!io::is_hit_())
+				{
+					return 0;
+				}
+				char ch_ = io::getch_();
+				if (ch == '[')
+				{
+					ch_ = io::getch_();
+					if (ch_ == 'A')
+					{
+						d = new direction(direction::up);
+					}
+					if (ch_ == 'B')
+					{
+						d = new direction(direction::down);
+					}
+					if (ch_ == 'C')
+					{
+						d = new direction(direction::right);
+					}
+					if (ch_ == 'D')
+					{
+						d = new direction(direction::left);
+					}
+					else
+					{
+						return ch_;
+					}
+				}
+				else
+				{
+					return ch_;
+				}
+			}
+			return 0;	
+#endif
+		}
+	}
+
 	namespace io
 	{
 		void print_colored_line(size_t y, colors::c16 background_color)
@@ -21,17 +141,12 @@ namespace ferruscpp
 			io::putstr_(line);
 		}
 
-		bool is_normal_symbol(const char& ch)
-		{
-			return 32 <= ch && ch <= 126;
-		}
-
 		void read_and_write(std::string& line)
 		{
 			char ch = io::getch_();
-			while (ch != '\n' && ch != '\r')
+			while (!symbols::is_enter(ch))
 			{
-				if (is_normal_symbol(ch))
+				if (symbols::is_normal_symbol(ch))
 				{
 					line += ch;
 					io::putstr_(std::string() + ch);
@@ -41,22 +156,8 @@ namespace ferruscpp
 		}
 	}
 
-	namespace wims
+	namespace wims_src
 	{
-		enum wims_mode
-		{
-			move,
-			write,
-			draw
-		};
-
-		enum direction
-		{
-			up,
-			down,
-			left,
-			right
-		};
 
 		template<typename Picture_>
 		class wims
@@ -65,8 +166,8 @@ namespace ferruscpp
 			Picture_& picture;
 			std::pair<size_t, size_t> pixel_size;
 			std::pair<size_t, size_t> screen_size;
-			wims_mode mode = wims_mode::move;
-			bool is_console_open;
+			wims_mode mode = wims_mode::write;
+			bool is_console_open = false;
 
 			std::pair<size_t, size_t> get_picture_pos(std::pair<size_t, size_t> cursor_pos)
 			{
@@ -134,19 +235,47 @@ namespace ferruscpp
 
 			void start()
 			{
+				io::clear_in_buffer();
 				char ch;
+				char buffer = 0;
 				while (true)
 				{
-					ch = io::getch_();
+					if (buffer == 0)
+					{
+						ch = io::getch_();
+					}
+					else
+					{
+						ch = buffer;
+						buffer = 0;
+					}
+					//
+					direction* d = nullptr;
+					buffer = symbols::is_arrow(ch, d);
+					if (d != nullptr)
+					{
+						move_cursor(*d);
+						continue;
+					}
+					//
 					if (ch == 27)//need to switch modes
 					{
 						auto cursor_pos = cursor::get_cursor_pos();
 						open_console_mode();
-						ch = io::getch_();
+						if (buffer == 0)
+						{
+							ch = io::getch_();
+						}
+						else
+						{
+							ch = buffer;
+							buffer = 0;
+						}
 						while (ch != 27)
 						{
 							if (ch == ':')
 							{
+								open_console_mode();
 								io::putstr_(":");
 								std::string command;
 								io::read_and_write(command);
@@ -200,7 +329,7 @@ namespace ferruscpp
 						}
 						if (mode == wims_mode::write)
 						{
-							if (ch == '\n' || ch == '\r')
+							if (symbols::is_enter(ch))
 							{
 								if (move_cursor(direction::down))
 								{
@@ -210,15 +339,36 @@ namespace ferruscpp
 									}
 								}
 							}
-							else if(io::is_normal_symbol(ch))
+							else if(symbols::is_normal_symbol(ch))
 							{
-								
+								auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
+								auto& pixel = picture.get_pixel(points::position(picture_pos));
+								pixel.set(ch);
+								pixel.draw();
+							}
+							else if (symbols::is_backspace(ch))
+							{
+								move_cursor(direction::left);
+								auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
+								auto& pixel = picture.get_pixel(points::position(picture_pos));
+								pixel.set(' ');
+								pixel.draw();
+								move_cursor(direction::left);
 							}
 						}
 					}
 				}
 			}
 		};
+	}
+}
+
+void symbols_finder()
+{
+	while (true)
+	{
+		char ch = io::getch_();
+		io::putstr_(to_string((int)ch) + ' ');
 	}
 }
 
@@ -301,13 +451,13 @@ int main(int argc, char* argv[])
 					if (need_create)
 					{
 						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name, width, height);
-						wims::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
+						wims_src::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
 						program.start();
 					}
 					else
 					{
 						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name);
-						wims::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
+						wims_src::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
 						program.start();
 					}
 					break;
@@ -324,13 +474,13 @@ int main(int argc, char* argv[])
 					if (need_create)
 					{
 						Picture<pixels::Console_Pixel_16> a(name, width, height);
-						wims::wims<Picture<pixels::Console_Pixel_16>> program(a);
+						wims_src::wims<Picture<pixels::Console_Pixel_16>> program(a);
 						program.start();
 					}
 					else
 					{
 						Picture<pixels::Console_Pixel_16> a(name);
-						wims::wims<Picture<pixels::Console_Pixel_16>> program(a);
+						wims_src::wims<Picture<pixels::Console_Pixel_16>> program(a);
 						program.start();
 					}
 					break;
