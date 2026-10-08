@@ -21,13 +21,21 @@ namespace ferruscpp
 			io::putstr_(line);
 		}
 
+		bool is_normal_symbol(const char& ch)
+		{
+			return 32 <= ch && ch <= 126;
+		}
+
 		void read_and_write(std::string& line)
 		{
 			char ch = io::getch_();
 			while (ch != '\n' && ch != '\r')
 			{
-				line += ch;
-				io::putstr_(std::string() + ch);
+				if (is_normal_symbol(ch))
+				{
+					line += ch;
+					io::putstr_(std::string() + ch);
+				}
 				ch = io::getch_();
 			}
 		}
@@ -35,13 +43,12 @@ namespace ferruscpp
 
 	namespace wims
 	{
-		template<typename Picture_>
-		void draw_picture(const Picture_& picture, const std::pair<size_t, size_t>& pixel_size)
+		enum wims_mode
 		{
-			picture.draw(points::position(0, 0));
-			cursor::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
-			colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
-		}
+			move,
+			write,
+			draw
+		};
 
 		enum direction
 		{
@@ -51,99 +58,167 @@ namespace ferruscpp
 			right
 		};
 
-		template<typename picture_type>
-		bool move_cursor(const picture_type& picture, const std::pair<size_t, size_t>& pixel_size, const direction& d)
+		template<typename Picture_>
+		class wims
 		{
-			auto cur_pos = cursor::get_cursor_pos();
-			switch (d)
-			{
-			case direction::up: cur_pos.second -= pixel_size.second; break;
-			case direction::down: cur_pos.second += pixel_size.second; break;
-			case direction::left: cur_pos.first -= pixel_size.first; break;
-			case direction::right: cur_pos.first += pixel_size.first; break;
-			}
-			if (picture.is_in_picture({ cur_pos.first / pixel_size.first, cur_pos.second / pixel_size.second}))
-			{
-				cursor::set_cursor_pos(cur_pos.first, cur_pos.second);
-				return true;
-			}
-			return false;
-		}
-
-		void open_console_mode(const std::pair<size_t, size_t>& screen_size)
-		{
-			io::print_colored_line(screen_size.second - 2, colors::c16(15));
-			io::print_colored_line(screen_size.second - 1, colors::c16(0));
-			cursor::set_cursor_pos(0, screen_size.second - 1);
-			colors::set_color_16(colors::c16(15), colors::c16(0));
-		}
-		void close_console_mode(const std::pair<size_t, size_t>& screen_size)
-		{
-			io::print_colored_line(screen_size.second - 2, colors::c16(0));
-			io::print_colored_line(screen_size.second - 1, colors::c16(0));
-		}
-
-		template<typename picture_type>
-		void start(picture_type& picture)
-		{
-			std::pair<size_t, size_t> pixel_size = picture.get_pixel_size();
-			std::pair<size_t, size_t> screen_size = screen::get_right_down_angle();
-			draw_picture(picture, pixel_size);
-			enum wims_mode
-			{
-				move,
-				write,
-			};
+		private:
+			Picture_& picture;
+			std::pair<size_t, size_t> pixel_size;
+			std::pair<size_t, size_t> screen_size;
 			wims_mode mode = wims_mode::move;
-			char ch;
-			while (true)
+			bool is_console_open;
+
+			std::pair<size_t, size_t> get_picture_pos(std::pair<size_t, size_t> cursor_pos)
 			{
-				ch = io::getch_();
-				if (ch == 27)//need to switch modes
+				return { cursor_pos.first / pixel_size.first, cursor_pos.second / pixel_size.second };
+			}
+
+			void draw_picture()
+			{
+				picture.draw(points::position(0, 0));
+				cursor::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
+				colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
+			}
+			void open_console_mode()
+			{
+				io::print_colored_line(screen_size.second - 2, colors::c16(15));
+				io::print_colored_line(screen_size.second - 1, colors::c16(0));
+				cursor::set_cursor_pos(0, screen_size.second - 1);
+				colors::set_color_16(colors::c16(15), colors::c16(0));
+			}
+			void close_console_mode()
+			{
+				io::print_colored_line(screen_size.second - 2, colors::c16(0));
+				io::print_colored_line(screen_size.second - 1, colors::c16(0));
+			}
+
+			bool move_cursor(const direction& d)
+			{
+				auto cur_pos = cursor::get_cursor_pos();
+				switch (d)
 				{
-					open_console_mode(screen_size);
-					ch = io::getch_();
-					while (ch != 27)
-					{
-						open_console_mode(screen_size);
-						if (ch == ':')
-						{
-							io::putstr_(":");
-							std::string command;
-							io::read_and_write(command);
-							//надо парсить команды
-							open_console_mode(screen_size);
-						}
-						else
-						{
-							io::putstr_("[ESC]");
-						}
-						ch = io::getch_();
-					}
-					close_console_mode(screen_size);
-					draw_picture(picture, pixel_size);
+				case direction::up: cur_pos.second -= pixel_size.second; break;
+				case direction::down: cur_pos.second += pixel_size.second; break;
+				case direction::left: cur_pos.first -= pixel_size.first; break;
+				case direction::right: cur_pos.first += pixel_size.first; break;
 				}
-				if (mode == wims_mode::move)
+				if (picture.is_in_picture(points::position(get_picture_pos(cur_pos))))
 				{
-					if (ch == 'w' || ch == 'W')//up
+					cursor::set_cursor_pos(cur_pos.first, cur_pos.second);
+					return true;
+				}
+				return false;
+			}
+
+			void draw_ui()
+			{
+				if (is_console_open)
+				{
+					open_console_mode();
+				}
+				else
+				{
+					close_console_mode();
+				}
+				draw_picture();
+			}
+
+		public:
+
+			wims(Picture_& picture_) : picture(picture_)
+			{
+				pixel_size = picture.get_pixel_size();
+				screen_size = screen::get_right_down_angle();
+				draw_ui();
+			}
+
+			void start()
+			{
+				char ch;
+				while (true)
+				{
+					ch = io::getch_();
+					if (ch == 27)//need to switch modes
 					{
-						move_cursor(picture, pixel_size, direction::up);
+						auto cursor_pos = cursor::get_cursor_pos();
+						open_console_mode();
+						ch = io::getch_();
+						while (ch != 27)
+						{
+							if (ch == ':')
+							{
+								io::putstr_(":");
+								std::string command;
+								io::read_and_write(command);
+								//
+								if (command == "move")
+								{
+									mode = wims_mode::move;
+								}
+								else if (command == "write")
+								{
+									mode = wims_mode::write;
+								}
+								else if (command == "draw")
+								{
+									mode = wims_mode::draw;
+								}
+								//
+								open_console_mode();
+							}
+							else
+							{
+								open_console_mode();
+								io::putstr_("[ESC]");
+							}
+							ch = io::getch_();
+						}
+						close_console_mode();
+						draw_picture();
+						cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
 					}
-					if (ch == 'a' || ch == 'A')//left
+					else
 					{
-						move_cursor(picture, pixel_size, direction::left);
-					}
-					if (ch == 's' || ch == 'S')//down
-					{
-						move_cursor(picture, pixel_size, direction::down);
-					}
-					if (ch == 'd' || ch == 'D')//right
-					{
-						move_cursor(picture, pixel_size, direction::right);
+						if (mode == wims_mode::move)
+						{
+							if (ch == 'w' || ch == 'W')//up
+							{
+								move_cursor(direction::up);
+							}
+							if (ch == 'a' || ch == 'A')//left
+							{
+								move_cursor(direction::left);
+							}
+							if (ch == 's' || ch == 'S')//down
+							{
+								move_cursor(direction::down);
+							}
+							if (ch == 'd' || ch == 'D')//right
+							{
+								move_cursor(direction::right);
+							}
+						}
+						if (mode == wims_mode::write)
+						{
+							if (ch == '\n' || ch == '\r')
+							{
+								if (move_cursor(direction::down))
+								{
+									while (move_cursor(direction::left))
+									{
+
+									}
+								}
+							}
+							else if(io::is_normal_symbol(ch))
+							{
+								
+							}
+						}
 					}
 				}
 			}
-		}
+		};
 	}
 }
 
@@ -226,12 +301,14 @@ int main(int argc, char* argv[])
 					if (need_create)
 					{
 						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name, width, height);
-						wims::start(a);
+						wims::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
+						program.start();
 					}
 					else
 					{
 						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name);
-						wims::start(a);
+						wims::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
+						program.start();
 					}
 					break;
 				default:
@@ -247,12 +324,14 @@ int main(int argc, char* argv[])
 					if (need_create)
 					{
 						Picture<pixels::Console_Pixel_16> a(name, width, height);
-						wims::start(a);
+						wims::wims<Picture<pixels::Console_Pixel_16>> program(a);
+						program.start();
 					}
 					else
 					{
 						Picture<pixels::Console_Pixel_16> a(name);
-						wims::start(a);
+						wims::wims<Picture<pixels::Console_Pixel_16>> program(a);
+						program.start();
 					}
 					break;
 				default:

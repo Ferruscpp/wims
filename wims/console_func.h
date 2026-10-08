@@ -101,7 +101,7 @@ namespace ferruscpp
 			int bottom_x = 0;
 			int top_x = 201;
 			int bottom_y = 0;
-			int top_y = 51;
+			int top_y = 52;
 			colors::c16 foreground_basic = 15;
 			colors::c16 background_basic = 0;
 		public:
