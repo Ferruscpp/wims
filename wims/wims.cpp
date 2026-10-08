@@ -292,6 +292,10 @@ namespace ferruscpp
 								{
 									mode = wims_mode::draw;
 								}
+								else if (command == "s")
+								{
+									return;
+								}
 								//
 								open_console_mode();
 							}
@@ -375,6 +379,7 @@ void symbols_finder()
 int main(int argc, char* argv[])
 {
 	console::init_console_func();
+	screen::open_new_screen();
 	while (!io::is_hit_())
 	{
 
@@ -496,5 +501,6 @@ int main(int argc, char* argv[])
 		}
 	}
 	//
+	screen::close_screen();
 	console::end_of_work_console_func();
 }

@@ -435,7 +435,7 @@ namespace ferruscpp
 		uint32_t size_x = 80;
 		uint32_t size_y = 25;
 		points::position pixel_size;
-		T* pixel_table[300][300];
+		T* pixel_table[300][300] = { nullptr };
 		//
 		class Picture_Exception : public std::exception
 		{
@@ -493,7 +493,6 @@ namespace ferruscpp
 			{
 				throw exceptions::File_Not_Found_Exception();
 			}
-			build_pixel_table();
 			download();
 		}
 		Picture(std::string new_name, size_t x, size_t y) : size_x(x), size_y(y), name(new_name)
@@ -604,6 +603,10 @@ namespace ferruscpp
 			{
 				for (size_t x = 0; x < size_x; ++x)
 				{
+					if (pixel_table[x][y] == nullptr)
+					{
+						pixel_table[x][y] = new T;
+					}
 					in >> *pixel_table[x][y];
 				}
 			}
