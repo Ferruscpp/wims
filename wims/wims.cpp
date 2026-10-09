@@ -41,11 +41,7 @@ namespace ferruscpp
 		bool is_backspace(const char& ch)
 		{
 #if _WIN32
-			if (ch == -32 || ch == 224)
-			{
-				char ch_ = io::getch_();
-				return ch == 83;
-			}
+			return ch == 8;
 #elif __linux__
 			return ch == '\x7c'
 #endif
