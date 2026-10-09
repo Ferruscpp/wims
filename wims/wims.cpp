@@ -499,9 +499,28 @@ namespace ferruscpp
 								}
 								else if (command == "s" || command == "save")
 								{
+									picture.upload();
+								}
+								else if (command == "q" || command == "quite")
+								{
 									return;
 								}
-								else if (command == "set_color")
+								else if (command == "sq" || command == "save&quite" || command == "save quite" || command == "save and quite")
+								{
+									picture.upload();
+									return;
+								}
+								else if (command == "d" || command == "download")
+								{
+									clear_console_line();
+									io::putstr_("Do you really want to download picture? It will delete unsave changes[Y/N]: ");
+									char ch_ = io::getch_();
+									if (ch_ == 'Y')
+									{
+										picture.download();
+									}
+								}
+								else if (command == "set_color" || command == "set color")
 								{
 									clear_console_line();
 									set_paint<pixel_type>();
@@ -522,7 +541,7 @@ namespace ferruscpp
 					}
 					else
 					{
-						if (mode == wims_mode::move)
+						if (mode == wims_mode::move)	
 						{
 							exe_moving_numbers(ch);
 							exe_moving_leters(ch);

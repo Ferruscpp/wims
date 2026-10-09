@@ -441,7 +441,7 @@ namespace ferruscpp
 	private:
 		std::string folder_name = "./Pictures";
 		std::string name;
-		const std::string end_name = ".pic";
+		const std::string end_name = ".wmp";
 		uint32_t size_x = 80;
 		uint32_t size_y = 25;
 		points::position pixel_size;
@@ -645,7 +645,6 @@ namespace ferruscpp
 		//
 		~Picture()
 		{
-			upload();
 			for (size_t y = 0; y < size_y; ++y)
 			{
 				for (size_t x = 0; x < size_x; ++x)
@@ -666,9 +665,9 @@ namespace ferruscpp
 		points::window4 cur_pos;
 		uint32_t time;
 		//
-		std::string folder_name = "./Rolls";
+		std::string folder_name = "./";
 		std::string name;
-		const std::string end_name = ".roll";
+		const std::string end_name = ".wmr";
 		//
 		template<typename O> friend void files::update_path(O& object);
 		template<typename O> friend std::string files::get_file_name(O& object);
@@ -774,4 +773,5 @@ namespace ferruscpp
 		}
 	};
 
+	//for animations .wma
 }
