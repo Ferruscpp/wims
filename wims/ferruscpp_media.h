@@ -216,6 +216,7 @@ namespace ferruscpp
 			char symbol;
 			colors::c16 foreground, background;
 		public:
+			using base_pixel_type = Console_Pixel_16;
 			Console_Pixel_16() : symbol(' '), foreground(colors::get_foreground_basic_color()), background(colors::get_background_basic_color())
 			{
 
@@ -224,7 +225,7 @@ namespace ferruscpp
 			{
 
 			}
-			void draw() const
+			virtual void draw() const
 			{
 				colors::set_color_16(foreground, background);
 				std::string h;
@@ -245,6 +246,14 @@ namespace ferruscpp
 				symbol = symbol_;
 				foreground = foreground_;
 				background = background_;
+			}
+			colors::c16 get_foreground() const
+			{
+				return foreground;
+			}
+			colors::c16 get_background() const
+			{
+				return background;
 			}
 			static std::pair<size_t, size_t> get_size()
 			{
@@ -269,6 +278,7 @@ namespace ferruscpp
 		class Double_Pixel : public Pixel_
 		{
 		public:
+			using base_pixel_type = typename Pixel_::base_pixel_type;
 			Double_Pixel() : Pixel_(' ', colors::get_foreground_basic_color(), colors::get_background_basic_color())
 			{
 
@@ -277,7 +287,7 @@ namespace ferruscpp
 			{
 
 			}
-			void draw() const
+			void draw() const override
 			{
 				Pixel_::draw();
 				Pixel_::draw();
@@ -485,6 +495,7 @@ namespace ferruscpp
 			}
 		}
 	public:
+		using pixel_type = typename T::base_pixel_type;
 		Picture(std::string name_) : name(name_)
 		{
 			update_pixel_size();

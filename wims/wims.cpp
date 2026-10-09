@@ -124,6 +124,28 @@ namespace ferruscpp
 			return 0;	
 #endif
 		}
+
+		bool is_w(const char& ch)
+		{
+			return ch == 'w' || ch == 'W';
+		}
+		bool is_a(const char& ch)
+		{
+			return ch == 'a' || ch == 'A';
+		}
+		bool is_s(const char& ch)
+		{
+			return ch == 's' || ch == 'S';
+		}
+		bool is_d(const char& ch)
+		{
+			return ch == 'd' || ch == 'D';
+		}
+		bool is_moving_leter(const char& ch)
+		{
+			return is_w(ch) || is_a(ch) || is_s(ch) || is_d(ch);
+		}
+
 	}
 
 	namespace io
@@ -166,9 +188,13 @@ namespace ferruscpp
 			Picture_& picture;
 			std::pair<size_t, size_t> pixel_size;
 			std::pair<size_t, size_t> screen_size;
-			wims_mode mode = wims_mode::write;
+			wims_mode mode = wims_mode::move;
 			bool is_console_open = false;
 			std::pair<size_t, size_t> start_pos = { 1, 1 };
+			using pixel_type = typename Picture_::pixel_type;
+			bool need_set_foreground = false, need_set_background = false;
+			pixel_type paint;
+
 
 			std::pair<size_t, size_t> get_picture_pos(std::pair<size_t, size_t> cursor_pos)
 			{
@@ -187,7 +213,8 @@ namespace ferruscpp
 				size_t counter = 0;
 				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
 				{
-					io::putstr_(std::to_string(counter++));
+					io::putstr_(std::to_string(counter % 10));
+					++counter;
 					n_cursor_pos.second += pixel_size.second;
 					cursor::set_cursor_pos(0, pixel_size.second * (counter + 1));
 				}
@@ -198,7 +225,8 @@ namespace ferruscpp
 				counter = 0;
 				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
 				{
-					io::putstr_(std::to_string(counter++));
+					io::putstr_(std::to_string(counter % 10));
+					++counter;
 					n_cursor_pos.first += pixel_size.first;
 					cursor::set_cursor_pos(pixel_size.first * (counter + 1), 0);
 				}
@@ -209,17 +237,34 @@ namespace ferruscpp
 				cursor::set_cursor_pos(start_pos.first, start_pos.second);
 				colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
 			}
-			void open_console_mode()
+			void clear_console_line()
 			{
-				io::print_colored_line(screen_size.second - 2, colors::c16(15));
 				io::print_colored_line(screen_size.second - 1, colors::c16(0));
 				cursor::set_cursor_pos(0, screen_size.second - 1);
 				colors::set_color_16(colors::c16(15), colors::c16(0));
+			}
+			void open_console_mode()
+			{
+				io::print_colored_line(screen_size.second - 2, colors::c16(15));
+				clear_console_line();
 			}
 			void close_console_mode()
 			{
 				io::print_colored_line(screen_size.second - 2, colors::c16(0));
 				io::print_colored_line(screen_size.second - 1, colors::c16(0));
+			}
+			void draw_ui()
+			{
+				if (is_console_open)
+				{
+					open_console_mode();
+				}
+				else
+				{
+					close_console_mode();
+				}
+				write_markings();
+				draw_picture();
 			}
 
 			bool move_cursor(const direction& d)
@@ -259,22 +304,118 @@ namespace ferruscpp
 				}
 			}
 
-			void draw_ui()
+			template<typename Pixel_Type>
+			void set_paint()
 			{
-				if (is_console_open)
+				
+			}
+			void paint_pixel()
+			{
+				auto cursor_pos = cursor::get_cursor_pos();
+				points::position picture_pos(get_picture_pos(cursor_pos));
+				if (picture.is_in_picture(picture_pos))
 				{
-					open_console_mode();
+					pixel_type& pixel = picture.get_pixel(picture_pos);
+					if (need_set_foreground)
+					{
+						if (need_set_background)
+						{
+							pixel.set(paint.get_foreground(), paint.get_background());
+						}
+						else
+						{
+							pixel.set(paint.get_foreground(), pixel.get_background());
+						}
+					}
+					else
+					{
+						if (need_set_background)
+						{
+							pixel.set(pixel.get_foreground(), paint.get_background());
+						}
+					}
+					pixel.draw();
+					move_cursor(direction::left);
+				}
+			}
+
+			int scan_number_in_console_mode_for_c16()
+			{
+				std::string s_number;
+				io::read_and_write(s_number);
+				if (s_number.empty())
+				{
+					return -1;
+				}
+				int number = -1;
+				bool was_error = false;
+				try
+				{
+					number = std::stoi(s_number);
+				}
+				catch (const std::exception& ex)
+				{
+					was_error = true;
+				}
+				if (number < 0 || 16 <= number || was_error)
+				{
+					clear_console_line();
+					io::putstr_("Invalid argument");
+					console::wait(500);
+					return -1;
+				}
+				return number;
+			}
+			template<>
+			void set_paint<pixels::Console_Pixel_16>()
+			{
+				io::putstr_("foreground: ");
+				int foreground = scan_number_in_console_mode_for_c16();
+				if (foreground != -1)
+				{
+					paint.set(colors::c16(foreground), paint.get_foreground());
+					need_set_foreground = true;
 				}
 				else
 				{
-					close_console_mode();
+					need_set_foreground = false;
 				}
-				write_markings();
-				draw_picture();
+				clear_console_line();
+				io::putstr_("background: ");
+				int background = scan_number_in_console_mode_for_c16();
+				if (background != -1)
+				{
+					paint.set(paint.get_background(), colors::c16(background));
+					need_set_background = true;
+				}
+				else
+				{
+					need_set_background = false;
+				}
+			}
+
+			void exe_moving_leters(const char& ch)
+			{
+				if (symbols::is_w(ch))//up
+				{
+					move_cursor(direction::up);
+				}
+				if (symbols::is_a(ch))//left
+				{
+					move_cursor(direction::left);
+				}
+				if (symbols::is_s(ch))//down
+				{
+					move_cursor(direction::down);
+				}
+				if (symbols::is_d(ch))//right
+				{
+					move_cursor(direction::right);
+				}
 			}
 
 		public:
-
+			
 			wims(Picture_& picture_) : picture(picture_)
 			{
 				pixel_size = picture.get_pixel_size();
@@ -324,7 +465,7 @@ namespace ferruscpp
 						{
 							if (ch == ':')
 							{
-								open_console_mode();
+								clear_console_line();
 								io::putstr_(":");
 								std::string command;
 								io::read_and_write(command);
@@ -345,12 +486,17 @@ namespace ferruscpp
 								{
 									return;
 								}
+								else if (command == "set_color")
+								{
+									clear_console_line();
+									set_paint<pixel_type>();
+								}
 								//
-								open_console_mode();
+								clear_console_line();
 							}
 							else
 							{
-								open_console_mode();
+								clear_console_line();
 								io::putstr_("[ESC]");
 							}
 							ch = io::getch_();
@@ -363,22 +509,7 @@ namespace ferruscpp
 					{
 						if (mode == wims_mode::move)
 						{
-							if (ch == 'w' || ch == 'W')//up
-							{
-								move_cursor(direction::up);
-							}
-							if (ch == 'a' || ch == 'A')//left
-							{
-								move_cursor(direction::left);
-							}
-							if (ch == 's' || ch == 'S')//down
-							{
-								move_cursor(direction::down);
-							}
-							if (ch == 'd' || ch == 'D')//right
-							{
-								move_cursor(direction::right);
-							}
+							exe_moving_leters(ch);
 						}
 						if (mode == wims_mode::write)
 						{
@@ -419,6 +550,15 @@ namespace ferruscpp
 								pixel.set(' ');
 								pixel.draw();
 								move_cursor(direction::left);
+							}
+						}
+						if (mode == wims_mode::draw)
+						{
+							if (symbols::is_moving_leter(ch))
+							{
+								paint_pixel();
+
+								exe_moving_leters(ch);
 							}
 						}
 					}
