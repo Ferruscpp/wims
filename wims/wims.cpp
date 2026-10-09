@@ -177,7 +177,7 @@ namespace ferruscpp
 			void draw_picture()
 			{
 				picture.draw(points::position(0, 0));
-				cursor::set_cursor_pos(pixel_size.first - 1, pixel_size.second - 1);
+				cursor::set_cursor_pos(0, 0);
 				colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
 			}
 			void open_console_mode()
@@ -208,7 +208,26 @@ namespace ferruscpp
 					cursor::set_cursor_pos(cur_pos.first, cur_pos.second);
 					return true;
 				}
+				else
+				{
+					cur_pos.first -= pixel_size.first;
+					if (picture.is_in_picture(points::position(get_picture_pos(cur_pos))))
+					{
+						cursor::set_cursor_pos(cur_pos.first + pixel_size.first, cur_pos.second);
+						return true;
+					}
+				}
 				return false;
+			}
+			void enter_move()
+			{
+				if (move_cursor(direction::down))
+				{
+					while (move_cursor(direction::left))
+					{
+
+					}
+				}
 			}
 
 			void draw_ui()
@@ -292,7 +311,7 @@ namespace ferruscpp
 								{
 									mode = wims_mode::draw;
 								}
-								else if (command == "s")
+								else if (command == "s" || command == "save")
 								{
 									return;
 								}
@@ -335,24 +354,36 @@ namespace ferruscpp
 						{
 							if (symbols::is_enter(ch))
 							{
-								if (move_cursor(direction::down))
-								{
-									while (move_cursor(direction::left))
-									{
-
-									}
-								}
+								enter_move();
 							}
 							else if(symbols::is_normal_symbol(ch))
 							{
 								auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
-								auto& pixel = picture.get_pixel(points::position(picture_pos));
-								pixel.set(ch);
-								pixel.draw();
+								if (!picture.is_in_picture(points::position(picture_pos)))
+								{
+									enter_move();
+								}
+								if (picture.is_in_picture(points::position(picture_pos)))
+								{
+									picture_pos = get_picture_pos(cursor::get_cursor_pos());
+									auto& pixel = picture.get_pixel(points::position(picture_pos));
+									pixel.set(ch);
+									pixel.draw();
+								}
 							}
 							else if (symbols::is_backspace(ch))
 							{
-								move_cursor(direction::left);
+								if (!move_cursor(direction::left))
+								{
+									if (move_cursor(direction::up))
+									{
+										while (move_cursor(direction::right))
+										{
+
+										}
+										move_cursor(direction::left);
+									}
+								}
 								auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
 								auto& pixel = picture.get_pixel(points::position(picture_pos));
 								pixel.set(' ');
