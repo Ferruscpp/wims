@@ -172,6 +172,17 @@ namespace ferruscpp
 					line += ch;
 					io::putstr_(std::string() + ch);
 				}
+				else if (symbols::is_backspace(ch))
+				{
+					if (!line.empty())
+					{
+						line.pop_back();
+						auto cursor_pos = cursor::get_cursor_pos();
+						cursor::set_cursor_pos(cursor_pos.first - 1, cursor_pos.second);
+						io::putstr_(" ");
+						cursor::set_cursor_pos(cursor_pos.first - 1, cursor_pos.second);
+					}
+				}
 				ch = io::getch_();
 			}
 		}
