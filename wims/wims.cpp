@@ -141,7 +141,10 @@ namespace ferruscpp
 		{
 			return is_w(ch) || is_a(ch) || is_s(ch) || is_d(ch);
 		}
-
+		bool is_moving_number(const char& ch)
+		{
+			return '1' <= ch && ch <= '9';
+		}
 	}
 
 	namespace io
@@ -409,6 +412,22 @@ namespace ferruscpp
 					move_cursor(direction::right);
 				}
 			}
+			void exe_moving_numbers(const char& ch)
+			{
+				switch (ch)
+				{
+				case '8': move_cursor(direction::up); break;
+				case '9': move_cursor(direction::up); move_cursor(direction::right); break;
+				case '6': move_cursor(direction::right); break;
+				case '3': move_cursor(direction::right); move_cursor(direction::down); break;
+				case '2': move_cursor(direction::down); break;
+				case '1': move_cursor(direction::down); move_cursor(direction::left); break;
+				case '4': move_cursor(direction::left); break;
+				case '7': move_cursor(direction::left); move_cursor(direction::up); break;
+				case '5': //just stay here
+					break;
+				}
+			}
 
 		public:
 			
@@ -505,6 +524,7 @@ namespace ferruscpp
 					{
 						if (mode == wims_mode::move)
 						{
+							exe_moving_numbers(ch);
 							exe_moving_leters(ch);
 						}
 						if (mode == wims_mode::write)
@@ -550,10 +570,10 @@ namespace ferruscpp
 						}
 						if (mode == wims_mode::draw)
 						{
-							if (symbols::is_moving_leter(ch))
+							if (symbols::is_moving_leter(ch) || symbols::is_moving_number(ch))
 							{
 								paint_pixel();
-
+								exe_moving_numbers(ch);
 								exe_moving_leters(ch);
 							}
 						}
