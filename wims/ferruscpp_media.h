@@ -439,7 +439,7 @@ namespace ferruscpp
 	class Picture
 	{
 	private:
-		std::string folder_name = "./Pictures";
+		std::string folder_name = "./";
 		std::string name;
 		const std::string end_name = ".wmp";
 		uint32_t size_x = 80;
@@ -626,6 +626,10 @@ namespace ferruscpp
 		void upload() const
 		{
 			std::ofstream out(files::get_file_name(*this));
+			if (!out.is_open())
+			{
+				throw exceptions::File_Not_Found_Exception();
+			}
 			io::print_raw(out, size_x);
 			io::print_raw(out, size_y);
 			for (size_t y = 0; y < size_y; ++y)

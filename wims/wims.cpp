@@ -188,7 +188,6 @@ namespace ferruscpp
 			std::pair<size_t, size_t> pixel_size;
 			std::pair<size_t, size_t> screen_size;
 			wims_mode mode = wims_mode::move;
-			bool is_console_open = false;
 			std::pair<size_t, size_t> start_pos = { 1, 1 };
 			using pixel_type = typename Picture_::pixel_type;
 			bool need_set_foreground = false, need_set_background = false;
@@ -254,14 +253,6 @@ namespace ferruscpp
 			}
 			void draw_ui()
 			{
-				if (is_console_open)
-				{
-					open_console_mode();
-				}
-				else
-				{
-					close_console_mode();
-				}
 				write_markings();
 				draw_picture();
 			}
@@ -518,6 +509,7 @@ namespace ferruscpp
 									if (ch_ == 'Y')
 									{
 										picture.download();
+										draw_ui();
 									}
 								}
 								else if (command == "set_color" || command == "set color")
