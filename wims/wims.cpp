@@ -168,16 +168,45 @@ namespace ferruscpp
 			std::pair<size_t, size_t> screen_size;
 			wims_mode mode = wims_mode::write;
 			bool is_console_open = false;
+			std::pair<size_t, size_t> start_pos = { 1, 1 };
 
 			std::pair<size_t, size_t> get_picture_pos(std::pair<size_t, size_t> cursor_pos)
 			{
-				return { cursor_pos.first / pixel_size.first, cursor_pos.second / pixel_size.second };
+				return { (cursor_pos.first - start_pos.first) / pixel_size.first, (cursor_pos.second - start_pos.second) / pixel_size.second };
 			}
 
+			void write_markings()
+			{
+				cursor::set_cursor_pos(0, 0);
+				colors::set_color_16(colors::c16(14), colors::c16(0));
+				io::putstr_("\\");
+				//write_vertical_numbers
+				colors::set_color_16(colors::c16(13), colors::c16(0));
+				cursor::set_cursor_pos(0, pixel_size.second);
+				std::pair<size_t, size_t> n_cursor_pos = { 1, 1 };
+				size_t counter = 0;
+				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
+				{
+					io::putstr_(std::to_string(counter++));
+					n_cursor_pos.second += pixel_size.second;
+					cursor::set_cursor_pos(0, pixel_size.second * (counter + 1));
+				}
+				//write_horizontal_numbers
+				colors::set_color_16(colors::c16(3), colors::c16(0));
+				cursor::set_cursor_pos(pixel_size.first, 0);
+				n_cursor_pos = { 1, 1 };
+				counter = 0;
+				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
+				{
+					io::putstr_(std::to_string(counter++));
+					n_cursor_pos.first += pixel_size.first;
+					cursor::set_cursor_pos(pixel_size.first * (counter + 1), 0);
+				}
+			}
 			void draw_picture()
 			{
-				picture.draw(points::position(0, 0));
-				cursor::set_cursor_pos(0, 0);
+				picture.draw(points::position(start_pos));
+				cursor::set_cursor_pos(start_pos.first, start_pos.second);
 				colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
 			}
 			void open_console_mode()
@@ -240,6 +269,7 @@ namespace ferruscpp
 				{
 					close_console_mode();
 				}
+				write_markings();
 				draw_picture();
 			}
 
