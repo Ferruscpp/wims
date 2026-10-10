@@ -564,7 +564,7 @@ namespace ferruscpp
 				size_t next_position_in_console_y = pos_y + pixel_size.y;
 				if (next_position_in_console_y <= cur_pos.y2)
 				{
-					set_cursor_pos(cur_pos.x1, next_position_in_console_y);
+					cursor::set_cursor_pos(static_cast<size_t>(cur_pos.x1), next_position_in_console_y);
 				}
 			}
 		}
@@ -709,21 +709,21 @@ namespace ferruscpp
 			time = new_time;
 		}
 		//
-		size_t& get_delay() const
+		size_t get_delay() const
 		{
-			return delay;
+			return static_cast<size_t>(delay);
 		}
-		points::position& get_pic_pos() const
+		points::position get_pic_pos() const
 		{
 			return pic_pos;
 		}
-		points::window4& get_cur_pos() const
+		points::window4 get_cur_pos() const
 		{
 			return cur_pos;
 		}
-		size_t& get_time() const
+		size_t get_time() const
 		{
-			return time;
+			return static_cast<size_t>(time);
 		}
 		//
 		void download()
@@ -733,9 +733,9 @@ namespace ferruscpp
 			{
 				throw exceptions::File_Not_Found_Exception();
 			}
-			scan_raw(in, delay);
+			io::scan_raw(in, delay);
 			in >> pic_pos >> cur_pos;
-			scan_raw(in, time);
+			io::scan_raw(in, time);
 			std::string path_to_picture;
 			getline(in, path_to_picture);
 			if (picture == nullptr)
@@ -758,9 +758,9 @@ namespace ferruscpp
 		void upload() const
 		{
 			std::ofstream out(get_file_name(*this));
-			print_raw(out, delay);
+			io::print_raw(out, delay);
 			out << pic_pos << cur_pos;
-			print_raw(out, time);
+			io::print_raw(out, time);
 			out << get_file_name(*picture);
 			out.close();
 			return;

@@ -43,7 +43,7 @@ namespace ferruscpp
 #if  defined(_WIN32) || defined(_WIN64)
 			return ch == 8;
 #elif defined(__linux__)
-			return ch == '\x7c'
+			return ch == 127;
 #endif
 		}
 
@@ -305,41 +305,6 @@ namespace ferruscpp
 				}
 			}
 
-			template<typename Pixel_Type>
-			void set_paint()
-			{
-				
-			}
-			void paint_pixel()
-			{
-				auto cursor_pos = cursor::get_cursor_pos();
-				points::position picture_pos(get_picture_pos(cursor_pos));
-				if (picture.is_in_picture(picture_pos))
-				{
-					pixel_type& pixel = picture.get_pixel(picture_pos);
-					if (need_set_foreground)
-					{
-						if (need_set_background)
-						{
-							pixel.set(paint.get_foreground(), paint.get_background());
-						}
-						else
-						{
-							pixel.set(paint.get_foreground(), pixel.get_background());
-						}
-					}
-					else
-					{
-						if (need_set_background)
-						{
-							pixel.set(pixel.get_foreground(), paint.get_background());
-						}
-					}
-					pixel.draw();
-					move_cursor(direction::left);
-				}
-			}
-
 			int scan_number_in_console_mode_for_c16()
 			{
 				std::string s_number;
@@ -367,31 +332,64 @@ namespace ferruscpp
 				}
 				return number;
 			}
-			template<>
-			void set_paint<pixels::Console_Pixel_16>()
+			template<typename Pixel_Type>
+			void set_paint()
 			{
-				io::putstr_("foreground: ");
-				int foreground = scan_number_in_console_mode_for_c16();
-				if (foreground != -1)
+				if constexpr (std::is_same_v<Pixel_Type, pixels::Console_Pixel_16>)
 				{
-					paint.set(colors::c16(foreground), paint.get_foreground());
-					need_set_foreground = true;
+					io::putstr_("foreground: ");
+					int foreground = scan_number_in_console_mode_for_c16();
+					if (foreground != -1)
+					{
+						paint.set(colors::c16(foreground), paint.get_foreground());
+						need_set_foreground = true;
+					}
+					else
+					{
+						need_set_foreground = false;
+					}
+					clear_console_line();
+					io::putstr_("background: ");
+					int background = scan_number_in_console_mode_for_c16();
+					if (background != -1)
+					{
+						paint.set(paint.get_background(), colors::c16(background));
+						need_set_background = true;
+					}
+					else
+					{
+						need_set_background = false;
+					}
 				}
-				else
+			}
+
+			void paint_pixel()
+			{
+				auto cursor_pos = cursor::get_cursor_pos();
+				points::position picture_pos(get_picture_pos(cursor_pos));
+				if (picture.is_in_picture(picture_pos))
 				{
-					need_set_foreground = false;
-				}
-				clear_console_line();
-				io::putstr_("background: ");
-				int background = scan_number_in_console_mode_for_c16();
-				if (background != -1)
-				{
-					paint.set(paint.get_background(), colors::c16(background));
-					need_set_background = true;
-				}
-				else
-				{
-					need_set_background = false;
+					pixel_type& pixel = picture.get_pixel(picture_pos);
+					if (need_set_foreground)
+					{
+						if (need_set_background)
+						{
+							pixel.set(paint.get_foreground(), paint.get_background());
+						}
+						else
+						{
+							pixel.set(paint.get_foreground(), pixel.get_background());
+						}
+					}
+					else
+					{
+						if (need_set_background)
+						{
+							pixel.set(pixel.get_foreground(), paint.get_background());
+						}
+					}
+					pixel.draw();
+					move_cursor(direction::left);
 				}
 			}
 
@@ -541,7 +539,7 @@ namespace ferruscpp
 										io::putstr_(std::to_string(i) + " ");
 									}
 									colors::set_color_16(colors::c16(15), colors::c16(0));
-									char ch_ = io::getch_();
+									io::getch_();
 								}
 								//
 								clear_console_line();

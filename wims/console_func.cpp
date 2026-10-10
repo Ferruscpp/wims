@@ -361,9 +361,9 @@ namespace ferruscpp
 
 		int getch_()
 		{
-			if (Terminal_Controller::get_info() != 1)
+			if (details::Terminal_Controller::get_info() != 1)
 			{
-				throw Not_Init_Console_Error();
+				throw exceptions::Not_Init_Console_Error();
 			}
 			char ch;
 			read(STDIN_FILENO, &ch, 1);
@@ -372,9 +372,9 @@ namespace ferruscpp
 
 		bool is_hit_()
 		{
-			if (Terminal_Controller::get_info() != 1)
+			if (details::Terminal_Controller::get_info() != 1)
 			{
-				throw Not_Init_Console_Error();
+				throw exceptions::Not_Init_Console_Error();
 			}
 			int bit_cnt;
 			ioctl(STDIN_FILENO, FIONREAD, &bit_cnt);
@@ -454,16 +454,16 @@ namespace ferruscpp
 #elif defined(__linux__)
 		void init_console_func()
 		{
-			tc_ = new Terminal_Controller;
-			putstr_("\033[?25l");
+			details::tc_ = new details::Terminal_Controller;
+			io::putstr_("\033[?25l");
 			start_for_all_OS();
 		}
 		
 		void end_of_work_console_func()
 		{
 			end_for_all_OS();
-			putstr_("\033[?25h");
-			delete tc_;
+			io::putstr_("\033[?25h");
+			delete details::tc_;
 		}
 
 		void wait(size_t milliseconds)
