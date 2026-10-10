@@ -88,22 +88,22 @@ namespace ferruscpp
 					return 0;
 				}
 				char ch_ = io::getch_();
-				if (ch == '[')
+				if (ch_ == 91)
 				{
 					ch_ = io::getch_();
-					if (ch_ == 'A')
+					if (ch_ == 65)
 					{
 						d = new direction(direction::up);
 					}
-					if (ch_ == 'B')
+					if (ch_ == 66)
 					{
 						d = new direction(direction::down);
 					}
-					if (ch_ == 'C')
+					if (ch_ == 67)
 					{
 						d = new direction(direction::right);
 					}
-					if (ch_ == 'D')
+					if (ch_ == 68)
 					{
 						d = new direction(direction::left);
 					}
@@ -246,6 +246,12 @@ namespace ferruscpp
 				cursor::set_cursor_pos(start_pos.first, start_pos.second);
 				colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
 			}
+			void draw_ui()
+			{
+				write_markings();
+				draw_picture();
+			}
+
 			void clear_console_line()
 			{
 				io::print_colored_line(screen_size.second - 1, colors::c16(0));
@@ -262,10 +268,81 @@ namespace ferruscpp
 				io::print_colored_line(screen_size.second - 2, colors::c16(0));
 				io::print_colored_line(screen_size.second - 1, colors::c16(0));
 			}
-			void draw_ui()
+			bool start_console(char& ch)
 			{
-				write_markings();
-				draw_picture();
+				if (ch == ':')
+				{
+					clear_console_line();
+					io::putstr_(":");
+					std::string command;
+					io::read_and_write(command);
+					//
+					if (command == "move")
+					{
+						mode = wims_mode::move;
+					}
+					else if (command == "write")
+					{
+						mode = wims_mode::write;
+					}
+					else if (command == "draw")
+					{
+						mode = wims_mode::draw;
+					}
+					else if (command == "s" || command == "save")
+					{
+						picture.upload();
+					}
+ 					else if (command == "q" || command == "quite")
+					{
+						return true;
+					}
+					else if (command == "sq" || command == "save&quite" || command == "save quite" || command == "save and quite")
+					{
+						picture.upload();
+						return true;
+					}
+					else if (command == "d" || command == "download")
+					{
+						clear_console_line();
+						io::putstr_("Do you really want to download picture? It will delete unsave changes[Y/N]: ");
+						char ch_ = io::getch_();
+						if (ch_ == 'Y')
+						{
+							picture.download();
+							draw_ui();
+						}
+					}
+					else if (command == "set_color" || command == "set color")
+					{
+						clear_console_line();
+						set_paint<pixel_type>();
+					}
+					else if (command == "show_colors" || command == "show colors")
+					{
+						clear_console_line();
+						colors::c16 showing_color;
+						for (int i = 0; i < 16; i++)
+						{
+							showing_color = colors::c16(i);
+							colors::set_color_16(colors::c16(15), showing_color);
+							io::putstr_(" ");
+							colors::set_color_16(colors::c16(15), colors::c16(0));
+							io::putstr_(std::to_string(i) + " ");
+						}
+						colors::set_color_16(colors::c16(15), colors::c16(0));
+						io::getch_();
+					}
+					//
+					clear_console_line();
+				}
+				else
+				{
+					clear_console_line();
+					io::putstr_("[ESC]");
+				}
+				ch = io::getch_();
+				return false;
 			}
 
 			bool move_cursor(const direction& d)
@@ -462,154 +539,88 @@ namespace ferruscpp
 						move_cursor(*d);
 						continue;
 					}
-					//
-					if (ch == 27)//need to switch modes
+					else
 					{
-						auto cursor_pos = cursor::get_cursor_pos();
-						open_console_mode();
-						if (buffer == 0)
+						if (ch == 27)//need to switch modes
 						{
-							ch = io::getch_();
-						}
-						else
-						{
-							ch = buffer;
-							buffer = 0;
-						}
-						while (ch != 27)
-						{
-							if (ch == ':')
+							auto cursor_pos = cursor::get_cursor_pos();
+							open_console_mode();
+							if (buffer == 0)
 							{
-								clear_console_line();
-								io::putstr_(":");
-								std::string command;
-								io::read_and_write(command);
-								//
-								if (command == "move")
-								{
-									mode = wims_mode::move;
-								}
-								else if (command == "write")
-								{
-									mode = wims_mode::write;
-								}
-								else if (command == "draw")
-								{
-									mode = wims_mode::draw;
-								}
-								else if (command == "s" || command == "save")
-								{
-									picture.upload();
-								}
-								else if (command == "q" || command == "quite")
-								{
-									return;
-								}
-								else if (command == "sq" || command == "save&quite" || command == "save quite" || command == "save and quite")
-								{
-									picture.upload();
-									return;
-								}
-								else if (command == "d" || command == "download")
-								{
-									clear_console_line();
-									io::putstr_("Do you really want to download picture? It will delete unsave changes[Y/N]: ");
-									char ch_ = io::getch_();
-									if (ch_ == 'Y')
-									{
-										picture.download();
-										draw_ui();
-									}
-								}
-								else if (command == "set_color" || command == "set color")
-								{
-									clear_console_line();
-									set_paint<pixel_type>();
-								}
-								else if (command == "show_colors" || command == "show colors")
-								{
-									clear_console_line();
-									colors::c16 showing_color;
-									for (int i = 0; i < 16; i++)
-									{
-										showing_color = colors::c16(i);
-										colors::set_color_16(colors::c16(15), showing_color);
-										io::putstr_(" ");
-										colors::set_color_16(colors::c16(15), colors::c16(0));
-										io::putstr_(std::to_string(i) + " ");
-									}
-									colors::set_color_16(colors::c16(15), colors::c16(0));
-									io::getch_();
-								}
-								//
-								clear_console_line();
+								ch = io::getch_();
 							}
 							else
 							{
-								clear_console_line();
-								io::putstr_("[ESC]");
+								ch = buffer;
+								buffer = 0;
 							}
-							ch = io::getch_();
-						}
-						close_console_mode();
-						draw_picture();
-						cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
-					}
-					else
-					{
-						if (mode == wims_mode::move)	
-						{
-							exe_moving_numbers(ch);
-							exe_moving_leters(ch);
-						}
-						if (mode == wims_mode::write)
-						{
-							if (symbols::is_enter(ch))
+							while (ch != 27)
 							{
-								enter_move();
+								if (start_console(ch))
+								{
+									return;
+								}
 							}
-							else if(symbols::is_normal_symbol(ch))
+							close_console_mode();
+							draw_picture();
+							cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
+						}
+						else
+						{
+							if (mode == wims_mode::move)
 							{
-								auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
-								if (!picture.is_in_picture(points::position(picture_pos)))
+								exe_moving_numbers(ch);
+								exe_moving_leters(ch);
+							}
+							if (mode == wims_mode::write)
+							{
+								if (symbols::is_enter(ch))
 								{
 									enter_move();
 								}
-								if (picture.is_in_picture(points::position(picture_pos)))
+								else if (symbols::is_normal_symbol(ch))
 								{
-									picture_pos = get_picture_pos(cursor::get_cursor_pos());
-									auto& pixel = picture.get_pixel(points::position(picture_pos));
-									pixel.set(ch);
-									pixel.draw();
-								}
-							}
-							else if (symbols::is_backspace(ch))
-							{
-								if (!move_cursor(direction::left))
-								{
-									if (move_cursor(direction::up))
+									auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
+									if (!picture.is_in_picture(points::position(picture_pos)))
 									{
-										while (move_cursor(direction::right))
-										{
-
-										}
-										move_cursor(direction::left);
+										enter_move();
+									}
+									if (picture.is_in_picture(points::position(picture_pos)))
+									{
+										picture_pos = get_picture_pos(cursor::get_cursor_pos());
+										auto& pixel = picture.get_pixel(points::position(picture_pos));
+										pixel.set(ch);
+										pixel.draw();
 									}
 								}
-								auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
-								auto& pixel = picture.get_pixel(points::position(picture_pos));
-								pixel.set(' ');
-								pixel.draw();
-								move_cursor(direction::left);
+								else if (symbols::is_backspace(ch))
+								{
+									if (!move_cursor(direction::left))
+									{
+										if (move_cursor(direction::up))
+										{
+											while (move_cursor(direction::right))
+											{
+
+											}
+											move_cursor(direction::left);
+										}
+									}
+									auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
+									auto& pixel = picture.get_pixel(points::position(picture_pos));
+									pixel.set(' ');
+									pixel.draw();
+									move_cursor(direction::left);
+								}
 							}
-						}
-						if (mode == wims_mode::draw)
-						{
-							if (symbols::is_moving_leter(ch) || symbols::is_moving_number(ch))
+							if (mode == wims_mode::draw)
 							{
-								paint_pixel();
-								exe_moving_numbers(ch);
-								exe_moving_leters(ch);
+								if (symbols::is_moving_leter(ch) || symbols::is_moving_number(ch))
+								{
+									paint_pixel();
+									exe_moving_numbers(ch);
+									exe_moving_leters(ch);
+								}
 							}
 						}
 					}
@@ -632,11 +643,6 @@ int main(int argc, char* argv[])
 {
 	console::init_console_func();
 	screen::open_new_screen();
-	while (!io::is_hit_())
-	{
-
-	}
-	io::clear_in_buffer();
 	//
 	if (argc == 1)
 	{

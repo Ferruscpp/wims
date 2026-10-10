@@ -509,7 +509,6 @@ namespace ferruscpp
 		{
 			update_pixel_size();
 			files::update_path(*this);
-			files::build_file(*this);
 			build_pixel_table();
 		}
 		//
