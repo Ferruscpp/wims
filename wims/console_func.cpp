@@ -1,10 +1,5 @@
 #include "console_func.h"
 
-#if DEBUG_MODE_FOR_LINUX
-#define _WIN32 0
-#define __linux__ 1
-#endif
-
 namespace ferruscpp
 {
 	namespace screen
@@ -278,7 +273,7 @@ namespace ferruscpp
 
 		Screen_Controller* sc_;
 
-#if __linux__
+#if defined(__linux__)
 		//Terminal_Controller
 		int Terminal_Controller::counter = 0;
 		Terminal_Controller::Terminal_Controller()
@@ -320,7 +315,7 @@ namespace ferruscpp
 			return massage.c_str();
 		}
 
-#if __linux__
+#if defined(__linux__)
 		const char* Not_Init_Console_Error::what() const noexcept
 		{
 			return message.c_str();
@@ -330,7 +325,7 @@ namespace ferruscpp
 
 	namespace io
 	{
-#if _WIN32
+#if  defined(_WIN32) || defined(_WIN64)
 		int putstr_(std::string str)
 		{
 			for (int i = 0; i < str.size(); ++i)
@@ -358,7 +353,7 @@ namespace ferruscpp
 			HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
 			FlushConsoleInputBuffer(hStdin);
 		}
-#elif __linux__
+#elif defined(__linux__)
 		int putstr_(std::string str)
 		{
 			return write(1, str.c_str(), str.size());
@@ -395,7 +390,7 @@ namespace ferruscpp
 
 	namespace files
 	{
-#if _WIN32
+#if  defined(_WIN32) || defined(_WIN64)
 		void create_folder(std::string folder)
 		{
 			for (size_t i = 0; i < folder.size(); i++)
@@ -408,7 +403,7 @@ namespace ferruscpp
 			//string folder_ = '\"' + folder_ + '\"';
 			system(("mkdir " + folder + " 2>nul").c_str());
 		}
-#elif __linux__
+#elif defined(__linux__)
 		void create_folder(std::string folder)
 		{
 			std::string folder_ = '\'' + folder + '\'';
@@ -431,7 +426,7 @@ namespace ferruscpp
 			io::putstr_("\033[?25h");
 		}
 
-#if _WIN32
+#if  defined(_WIN32) || defined(_WIN64)
 		void init_console_func()
 		{
 			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -456,7 +451,7 @@ namespace ferruscpp
 		{
 			Sleep(milliseconds);
 		}
-#elif __linux__
+#elif defined(__linux__)
 		void init_console_func()
 		{
 			tc_ = new Terminal_Controller;

@@ -9,21 +9,15 @@
 #include <utility>
 #include <chrono>
 
-#if _WIN32
+#if  defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #include <conio.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
 #else
 #error "Unknown OS"
-#endif
-
-#define DEBUG_MODE_FOR_LINUX 0
-#if DEBUG_MODE_FOR_LINUX
-#define _WIN32 0
-#define __linux__ 1
 #endif
 
 namespace ferruscpp
@@ -123,14 +117,14 @@ namespace ferruscpp
 
 		extern Screen_Controller* sc_;
 
-#if _WIN32
+#if  defined(_WIN32) || defined(_WIN64)
 		class Terminal_Controller
 		{
 		public:
 			Terminal_Controller() = default;
 			~Terminal_Controller() = default;
 		};
-#elif __linux__
+#elif defined(__linux__)
 		class Terminal_Controller
 		{
 		private:
@@ -177,7 +171,7 @@ namespace ferruscpp
 			const char* what() const noexcept override;
 		};
 
-#if __linux__
+#if defined(__linux__)
 		class Not_Init_Console_Error : public std::exception
 		{
 		private:

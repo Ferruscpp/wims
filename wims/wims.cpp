@@ -40,9 +40,9 @@ namespace ferruscpp
 
 		bool is_backspace(const char& ch)
 		{
-#if _WIN32
+#if  defined(_WIN32) || defined(_WIN64)
 			return ch == 8;
-#elif __linux__
+#elif defined(__linux__)
 			return ch == '\x7c'
 #endif
 		}
@@ -50,7 +50,7 @@ namespace ferruscpp
 		char is_arrow(const char& ch, wims_src::direction*& d)
 		{
 			using namespace wims_src;
-#if _WIN32
+#if  defined(_WIN32) || defined(_WIN64)
 			if (ch == -32 || ch == 224)
 			{
 				if (!io::is_hit_())
@@ -80,7 +80,7 @@ namespace ferruscpp
 				}
 			}
 			return 0;
-#elif __linux__
+#elif defined(__linux__)
 			if (ch == 27)
 			{
 				if (!io::is_hit_())
