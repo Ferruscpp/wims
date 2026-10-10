@@ -8,5 +8,6 @@
 !*.wmp
 !*.wmr
 !*.wma
+!makefile
 !README.md
 !.gitignore
