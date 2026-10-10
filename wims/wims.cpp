@@ -528,6 +528,21 @@ namespace ferruscpp
 									clear_console_line();
 									set_paint<pixel_type>();
 								}
+								else if (command == "show_colors" || command == "show colors")
+								{
+									clear_console_line();
+									colors::c16 showing_color;
+									for (int i = 0; i < 16; i++)
+									{
+										showing_color = colors::c16(i);
+										colors::set_color_16(colors::c16(15), showing_color);
+										io::putstr_(" ");
+										colors::set_color_16(colors::c16(15), colors::c16(0));
+										io::putstr_(std::to_string(i) + " ");
+									}
+									colors::set_color_16(colors::c16(15), colors::c16(0));
+									char ch_ = io::getch_();
+								}
 								//
 								clear_console_line();
 							}
