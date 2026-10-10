@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <conio.h>
 #include "console_func.h"
 
 namespace ferruscpp
