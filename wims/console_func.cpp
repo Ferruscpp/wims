@@ -47,14 +47,9 @@ namespace ferruscpp
 			io::putstr_("\033[2J");
 		}
 
-		void switch_to_big_screen()
+		void update_screen_size()
 		{
-			details::sc_->switch_to_big();
-		}
-
-		void switch_to_small_screen()
-		{
-			details::sc_->switch_to_small();
+			details::sc_->update_screen_size();
 		}
 	}
 
@@ -240,20 +235,9 @@ namespace ferruscpp
 
 	namespace details
 	{
-		void Screen_Controller::switch_to_small()
+		Screen_Controller::Screen_Controller()
 		{
-			bottom_x = 0;
-			top_x = 80;
-			bottom_y = 0;
-			top_y = 25;
-		}
-
-		void Screen_Controller::switch_to_big()
-		{
-			bottom_x = 0;
-			top_x = 201;
-			bottom_y = 0;
-			top_y = 51;
+			update_screen_size();
 		}
 
 		std::pair<size_t, size_t> Screen_Controller::get_right_down_angle() const
@@ -269,6 +253,30 @@ namespace ferruscpp
 		colors::c16 Screen_Controller::get_background_basic_color() const
 		{
 			return background_basic;
+		}
+
+		void Screen_Controller::update_screen_size()
+		{
+#if defined(_WIN32) || defined(_WIN64)
+			HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+			if (hOut == INVALID_HANDLE_VALUE)
+			{
+				throw exceptions::Screen_Exception();
+			}
+			CONSOLE_SCREEN_BUFFER_INFO csbi;
+			if (GetConsoleScreenBufferInfo(hOut, &csbi))
+			{
+				top_x = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+				top_y = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+			}
+#elif defined(__linux__)
+			winsize w;
+			if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != -1)
+			{
+				top_x = w.ws_col;
+				tip_y = w.ws_row;
+			}
+#endif
 		}
 
 		Screen_Controller* sc_;

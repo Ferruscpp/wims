@@ -36,9 +36,8 @@ namespace ferruscpp
 
 		void clear_screen();
 
-		void switch_to_big_screen();
+		void update_screen_size();
 
-		void switch_to_small_screen();
 	}
 
 	namespace colors
@@ -93,23 +92,21 @@ namespace ferruscpp
 		{
 		private:
 			int bottom_x = 0;
-			int top_x = 201;
+			int top_x;
 			int bottom_y = 0;
-			int top_y = 52;
+			int top_y;
 			colors::c16 foreground_basic = 15;
 			colors::c16 background_basic = 0;
 		public:
-			Screen_Controller() = default;
-
-			void switch_to_small();
-
-			void switch_to_big();
+			Screen_Controller();
 
 			std::pair<size_t, size_t> get_right_down_angle() const;
 
 			colors::c16 get_foreground_basic_color() const;
 
 			colors::c16 get_background_basic_color() const;
+
+			void update_screen_size();
 
 			friend void screen::check_position(int x, int y);
 			friend bool screen::is_in_screen(int x, int y);
