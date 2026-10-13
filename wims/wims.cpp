@@ -293,11 +293,11 @@ namespace ferruscpp
 					{
 						picture.upload();
 					}
- 					else if (command == "q" || command == "quite")
+ 					else if (command == "q" || command == "quit")
 					{
 						return true;
 					}
-					else if (command == "sq" || command == "save&quite" || command == "save quite" || command == "save and quite")
+					else if (command == "sq" || command == "save&quit" || command == "save quit" || command == "save and quit")
 					{
 						picture.upload();
 						return true;
@@ -418,7 +418,7 @@ namespace ferruscpp
 					int foreground = scan_number_in_console_mode_for_c16();
 					if (foreground != -1)
 					{
-						paint.set(colors::c16(foreground), paint.get_foreground());
+						paint.set(colors::c16(foreground), paint.get_background());
 						need_set_foreground = true;
 					}
 					else
@@ -430,7 +430,7 @@ namespace ferruscpp
 					int background = scan_number_in_console_mode_for_c16();
 					if (background != -1)
 					{
-						paint.set(paint.get_background(), colors::c16(background));
+						paint.set(paint.get_foreground(), colors::c16(background));
 						need_set_background = true;
 					}
 					else
@@ -643,6 +643,11 @@ int main(int argc, char* argv[])
 {
 	console::init_console_func();
 	screen::open_new_screen();
+	while (!io::is_hit_())
+	{
+
+	}
+	io::clear_in_buffer();
 	//
 	if (argc == 1)
 	{
