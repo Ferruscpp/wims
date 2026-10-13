@@ -47,7 +47,7 @@ namespace ferruscpp
 #endif
 		}
 
-		char is_arrow(const char& ch, wims_src::direction*& d)
+		bool is_arrow(const char& ch, wims_src::direction*& d)//can delete somesymbols
 		{
 			using namespace wims_src;
 #if  defined(_WIN32) || defined(_WIN64)
@@ -55,7 +55,7 @@ namespace ferruscpp
 			{
 				if (!io::is_hit_())
 				{
-					return 0;
+					return false;
 				}
 				char ch_ = io::getch_();
 				if (ch_ == 72)
@@ -76,20 +76,25 @@ namespace ferruscpp
 				}
 				else
 				{
-					return ch_;
+					return false;
 				}
+				return true;
 			}
-			return 0;
+			return false;
 #elif defined(__linux__)
 			if (ch == 27)
 			{
 				if (!io::is_hit_())
 				{
-					return 0;
+					return false;
 				}
 				char ch_ = io::getch_();
 				if (ch_ == 91)
 				{
+					if (!io::is_hit_())
+					{
+						return false;
+					}
 					ch_ = io::getch_();
 					if (ch_ == 65)
 					{
@@ -109,15 +114,16 @@ namespace ferruscpp
 					}
 					else
 					{
-						return ch_;
+						return false;
 					}
+					return true;
 				}
 				else
 				{
-					return ch_;
+					return false;
 				}
 			}
-			return 0;	
+			return false;
 #endif
 		}
 
@@ -210,7 +216,7 @@ namespace ferruscpp
 				return { (cursor_pos.first - start_pos.first) / pixel_size.first, (cursor_pos.second - start_pos.second) / pixel_size.second };
 			}
 
-			void write_markings()
+			void draw_markings()
 			{
 				cursor::set_cursor_pos(0, 0);
 				colors::set_color_16(colors::c16(14), colors::c16(0));
@@ -248,7 +254,7 @@ namespace ferruscpp
 			}
 			void draw_ui()
 			{
-				write_markings();
+				draw_markings();
 				draw_picture();
 			}
 
@@ -268,7 +274,7 @@ namespace ferruscpp
 				io::print_colored_line(screen_size.second - 2, colors::c16(0));
 				io::print_colored_line(screen_size.second - 1, colors::c16(0));
 			}
-			bool console_start(char& ch)
+			bool console_run_single_command(char& ch)
 			{
 				if (ch == ':')
 				{
@@ -344,6 +350,24 @@ namespace ferruscpp
 				ch = io::getch_();
 				return false;
 			}
+			bool console_start()
+			{
+				char ch;
+				auto cursor_pos = cursor::get_cursor_pos();
+				console_open();
+				ch = io::getch_();
+				while (ch != 27)
+				{
+					if (console_run_single_command(ch))
+					{
+						return true;
+					}
+				}
+				console_close();
+				draw_ui();
+				cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
+				return false;
+			}
 
 			bool move_cursor(const direction& d)
 			{
@@ -371,7 +395,7 @@ namespace ferruscpp
 				}
 				return false;
 			}
-			void enter_move()
+			void move_enter()
 			{
 				if (move_cursor(direction::down))
 				{
@@ -425,7 +449,7 @@ namespace ferruscpp
 					{
 						need_set_foreground = false;
 					}
-					clear_console_line();
+					console_clear_line();
 					io::putstr_("background: ");
 					int background = scan_number_in_console_mode_for_c16();
 					if (background != -1)
@@ -439,7 +463,6 @@ namespace ferruscpp
 					}
 				}
 			}
-
 			void paint_pixel()
 			{
 				auto cursor_pos = cursor::get_cursor_pos();
@@ -519,51 +542,22 @@ namespace ferruscpp
 			{
 				io::clear_in_buffer();
 				char ch;
-				char buffer = 0;
 				while (true)
 				{
-					if (buffer == 0)
-					{
-						ch = io::getch_();
-					}
-					else
-					{
-						ch = buffer;
-						buffer = 0;
-					}
-					//
+					ch = io::getch_();
 					direction* d = nullptr;
-					buffer = symbols::is_arrow(ch, d);
-					if (d != nullptr)
+					if (symbols::is_arrow(ch, d))
 					{
 						move_cursor(*d);
-						continue;
 					}
 					else
 					{
-						if (ch == 27)//need to switch modes
+						if (ch == 27)
 						{
-							auto cursor_pos = cursor::get_cursor_pos();
-							console_open();
-							if (buffer == 0)
+							if (console_start())
 							{
-								ch = io::getch_();
+								return;
 							}
-							else
-							{
-								ch = buffer;
-								buffer = 0;
-							}
-							while (ch != 27)
-							{
-								if (console_start(ch))
-								{
-									return;
-								}
-							}
-							console_close();
-							draw_ui();
-							cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
 						}
 						else
 						{
@@ -576,14 +570,14 @@ namespace ferruscpp
 							{
 								if (symbols::is_enter(ch))
 								{
-									enter_move();
+									move_enter();
 								}
 								else if (symbols::is_normal_symbol(ch))
 								{
 									auto picture_pos = get_picture_pos(cursor::get_cursor_pos());
 									if (!picture.is_in_picture(points::position(picture_pos)))
 									{
-										enter_move();
+										move_enter();
 									}
 									if (picture.is_in_picture(points::position(picture_pos)))
 									{
