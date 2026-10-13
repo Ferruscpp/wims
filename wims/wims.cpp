@@ -252,27 +252,27 @@ namespace ferruscpp
 				draw_picture();
 			}
 
-			void clear_console_line()
+			void console_clear_line()
 			{
 				io::print_colored_line(screen_size.second - 1, colors::c16(0));
 				cursor::set_cursor_pos(0, screen_size.second - 1);
 				colors::set_color_16(colors::c16(15), colors::c16(0));
 			}
-			void open_console_mode()
+			void console_open()
 			{
 				io::print_colored_line(screen_size.second - 2, colors::c16(15));
-				clear_console_line();
+				console_clear_line();
 			}
-			void close_console_mode()
+			void console_close()
 			{
 				io::print_colored_line(screen_size.second - 2, colors::c16(0));
 				io::print_colored_line(screen_size.second - 1, colors::c16(0));
 			}
-			bool start_console(char& ch)
+			bool console_start(char& ch)
 			{
 				if (ch == ':')
 				{
-					clear_console_line();
+					console_clear_line();
 					io::putstr_(":");
 					std::string command;
 					io::read_and_write(command);
@@ -304,7 +304,7 @@ namespace ferruscpp
 					}
 					else if (command == "d" || command == "download")
 					{
-						clear_console_line();
+						console_clear_line();
 						io::putstr_("Do you really want to download picture? It will delete unsave changes[Y/N]: ");
 						char ch_ = io::getch_();
 						if (ch_ == 'Y')
@@ -315,12 +315,12 @@ namespace ferruscpp
 					}
 					else if (command == "set_color" || command == "set color")
 					{
-						clear_console_line();
+						console_clear_line();
 						set_paint<pixel_type>();
 					}
 					else if (command == "show_colors" || command == "show colors")
 					{
-						clear_console_line();
+						console_clear_line();
 						colors::c16 showing_color;
 						for (int i = 0; i < 16; i++)
 						{
@@ -334,11 +334,11 @@ namespace ferruscpp
 						io::getch_();
 					}
 					//
-					clear_console_line();
+					console_clear_line();
 				}
 				else
 				{
-					clear_console_line();
+					console_clear_line();
 					io::putstr_("[ESC]");
 				}
 				ch = io::getch_();
@@ -402,7 +402,7 @@ namespace ferruscpp
 				}
 				if (number < 0 || 16 <= number || was_error)
 				{
-					clear_console_line();
+					console_clear_line();
 					io::putstr_("Invalid argument");
 					console::wait(500);
 					return -1;
@@ -544,7 +544,7 @@ namespace ferruscpp
 						if (ch == 27)//need to switch modes
 						{
 							auto cursor_pos = cursor::get_cursor_pos();
-							open_console_mode();
+							console_open();
 							if (buffer == 0)
 							{
 								ch = io::getch_();
@@ -556,13 +556,13 @@ namespace ferruscpp
 							}
 							while (ch != 27)
 							{
-								if (start_console(ch))
+								if (console_start(ch))
 								{
 									return;
 								}
 							}
-							close_console_mode();
-							draw_picture();
+							console_close();
+							draw_ui();
 							cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
 						}
 						else
@@ -648,6 +648,7 @@ int main(int argc, char* argv[])
 
 	}
 	io::clear_in_buffer();
+	screen::update_screen_size();
 	//
 	if (argc == 1)
 	{
