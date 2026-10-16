@@ -1,8 +1,8 @@
-﻿#include "console_func.h"
+#pragma once
+#include "console_func.h"
 #include "ferruscpp_media.h"
+#include <type_traits>
 #pragma comment(linker, "/STACK:16777216")
-using namespace std;
-using namespace ferruscpp;
 
 namespace ferruscpp
 {
@@ -38,6 +38,16 @@ namespace ferruscpp
 			return ch == '\n' || ch == '\r';
 		}
 
+		bool is_tab(const char& ch)
+		{
+			return ch == '\t';
+		}
+
+		bool is_esc(char ch)
+		{
+			return ch == 27;
+		}
+
 		bool is_backspace(const char& ch)
 		{
 #if  defined(_WIN32) || defined(_WIN64)
@@ -45,6 +55,11 @@ namespace ferruscpp
 #elif defined(__linux__)
 			return ch == 127;
 #endif
+		}
+
+		bool is_backtick(const char& ch)
+		{
+			return ch == '`';
 		}
 
 		bool is_arrow(const char& ch, wims_src::direction*& d)//can delete somesymbols
@@ -194,68 +209,233 @@ namespace ferruscpp
 		}
 	}
 
+	namespace figures
+	{
+		void draw_frame(points::position cur_pos, size_t size_x, size_t size_y, colors::c16 color, bool is_double = false)
+		{
+			std::string single_elem = " ";
+			if (is_double)
+			{
+				single_elem += ' ';
+			}
+			colors::set_color_16(colors::get_foreground_basic_color(), color);
+			cursor::set_cursor_pos(cur_pos.x, cur_pos.y);
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				io::putstr_(single_elem);
+			}
+			for (size_t y = 1; y <= size_y - 2; y++)
+			{
+				cursor::set_cursor_pos(cur_pos.x, cur_pos.y + y);
+				io::putstr_(single_elem);
+				cursor::set_cursor_pos(cur_pos.x + (size_x - 1) * single_elem.size(), cur_pos.y + y);
+				io::putstr_(single_elem);
+			}
+			cursor::set_cursor_pos(cur_pos.x, cur_pos.y + size_y - 1);
+			for (size_t x = 0; x < size_x; ++x)
+			{
+				io::putstr_(single_elem);
+			}
+		}
+
+	}
+
 	namespace wims_src
 	{
-
 		template<typename Picture_>
 		class wims
 		{
 		private:
+			using pixel_type = typename Picture_::pixel_type;
+
+			class Base_Panel
+			{
+			protected:
+				wims<Picture_>& parent;
+			public:
+				bool is_open = false, is_focusing_on_panel = false;
+
+				Base_Panel(wims<Picture_>& parent_) : parent(parent_)
+				{
+
+				}
+
+				virtual void draw() = 0;
+
+				virtual void run()
+				{
+					is_open = true;
+					is_focusing_on_panel = true;
+					parent.draw_ui();
+				}
+
+				void close()
+				{
+					is_open = false;
+					parent.draw_ui();
+				}
+			};
+			template<typename Pixel_Type>
+			class Panel : public Base_Panel
+			{
+
+			};
+
+			template<>
+			class Panel<pixels::Console_Pixel_16> : public Base_Panel
+			{
+			private:
+				enum objects_y_pos : uint32_t
+				{
+					fb_switch_line = 0,
+					first_color_line = fb_switch_line + 2,
+					dont_set_line = first_color_line + 20
+				};
+				enum settings
+				{
+					fb_switch,
+					color_switch
+				};
+				Picture<pixels::Console_Pixel_16> panel_c16{ "panel_for_Console_Pixel_16" };
+				int color_type_switch = 1;//0 is foreground and 1 is background
+				settings setting_switch = settings::fb_switch;
+
+				void draw_frame_for_colors()
+				{
+					if ((color_type_switch == 0 && !parent.need_set_foreground) || (color_type_switch == 1 && !parent.need_set_background))
+					{
+						figures::draw_frame(points::position{ static_cast<uint32_t>(parent.screen_size.first - 42), objects_y_pos::dont_set_line }, 21, 3, colors::c16{ 14 }, true);
+					}
+					else
+					{
+						int paint_number;
+						if (color_type_switch == 0)
+						{
+							paint_number = (int)parent.paint.get_foreground();
+						}
+						else
+						{
+							paint_number = (int)parent.paint.get_background();
+						}
+						figures::draw_frame(points::position{ static_cast<uint32_t>(parent.screen_size.first - 42 + (paint_number % 4) * 10), objects_y_pos::first_color_line + (paint_number / 4) * 5 }, 6, 6, colors::c16(15 - paint_number), true);
+					}
+				}
+				
+			public:
+				Panel(wims<Picture_>& parent_) : Base_Panel(parent_)
+				{
+
+				}
+
+				void draw() override
+				{
+					using namespace colors;
+					panel_c16.draw(points::position(parent.screen_size.first - panel_c16.get_size().first, 0));
+					//draw color_type_switch
+					set_color_16(get_foreground_basic_color(), get_background_basic_color());
+					if (color_type_switch == 0)
+					{
+						cursor::set_cursor_pos(parent.screen_size.first - 22, (size_t)objects_y_pos::fb_switch_line);
+					}
+					else
+					{
+						cursor::set_cursor_pos(parent.screen_size.first - 42, (size_t)objects_y_pos::fb_switch_line);
+					}
+					for (size_t x = 0; x < 22; ++x)
+					{
+						io::putstr_(" ");
+					}
+					//draw color
+					draw_frame_for_colors();
+					//draw switch
+					set_color_16(get_foreground_basic_color(), c16{ 14 });
+					size_t y_pos;
+					if (setting_switch == settings::fb_switch)
+					{
+						y_pos = objects_y_pos::fb_switch_line;
+					}
+					else if (setting_switch == settings::color_switch)
+					{
+						y_pos = objects_y_pos::first_color_line;
+					}
+					cursor::set_cursor_pos(parent.screen_size.first - panel_c16.get_size().first + 1, y_pos);
+					io::putstr_(" ");
+				}
+
+				void run() override
+				{
+					Base_Panel::run();
+					char ch = io::getch_();
+					while (!symbols::is_tab(ch))
+					{
+						if (symbols::is_enter(ch))
+						{
+							if (setting_switch == settings::fb_switch)
+							{
+								color_type_switch = 1 - color_type_switch;
+							}
+							else if (setting_switch == settings::color_switch)
+							{
+								bool* need_set = nullptr;
+								colors::c16* color = nullptr;
+								if (color_switch == 0)
+								{
+									need_set = &parent.need_set_foreground;
+									color = &parent.paint.get_foreground_ref();
+								}
+								else
+								{
+									need_set = &parent.need_set_background;
+									color = &parent.paint.get_background_ref();
+								}
+								//
+								if (*need_set == false)
+								{
+									*need_set = true;
+									*color = colors::c16(0);
+								}
+								else if ((int)*color != 15)
+								{
+									*color = colors::c16((int)*color + 1);
+								}
+								else
+								{
+									*need_set = false;
+								}
+							}
+						}
+						else if (symbols::is_backspace(ch))
+						{
+							if (setting_switch == settings::fb_switch)
+							{
+								setting_switch = settings::color_switch;
+							}
+							else
+							{
+								setting_switch = settings::fb_switch;
+							}
+						}
+						draw();
+						ch = io::getch_();
+					}
+					if (symbols::is_tab(ch))
+					{
+						close();
+					}
+				}
+			};
+
 			Picture_& picture;
+			Panel<pixel_type> panel{ *this };
 			std::pair<size_t, size_t> pixel_size;
 			std::pair<size_t, size_t> screen_size;
 			wims_mode mode = wims_mode::move;
 			std::pair<size_t, size_t> start_pos = { 1, 1 };
-			using pixel_type = typename Picture_::pixel_type;
 			bool need_set_foreground = false, need_set_background = false;
 			pixel_type paint;
-
-
 			std::pair<size_t, size_t> get_picture_pos(std::pair<size_t, size_t> cursor_pos)
 			{
 				return { (cursor_pos.first - start_pos.first) / pixel_size.first, (cursor_pos.second - start_pos.second) / pixel_size.second };
-			}
-
-			void draw_markings()
-			{
-				cursor::set_cursor_pos(0, 0);
-				colors::set_color_16(colors::c16(14), colors::c16(0));
-				io::putstr_("\\");
-				//write_vertical_numbers
-				colors::set_color_16(colors::c16(13), colors::c16(0));
-				cursor::set_cursor_pos(0, pixel_size.second);
-				std::pair<size_t, size_t> n_cursor_pos = { 1, 1 };
-				size_t counter = 0;
-				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
-				{
-					io::putstr_(std::to_string(counter % 10));
-					++counter;
-					n_cursor_pos.second += pixel_size.second;
-					cursor::set_cursor_pos(0, pixel_size.second * (counter + 1));
-				}
-				//write_horizontal_numbers
-				colors::set_color_16(colors::c16(3), colors::c16(0));
-				cursor::set_cursor_pos(pixel_size.first, 0);
-				n_cursor_pos = { 1, 1 };
-				counter = 0;
-				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
-				{
-					io::putstr_(std::to_string(counter % 10));
-					++counter;
-					n_cursor_pos.first += pixel_size.first;
-					cursor::set_cursor_pos(pixel_size.first * (counter + 1), 0);
-				}
-			}
-			void draw_picture()
-			{
-				picture.draw(points::position(start_pos));
-				cursor::set_cursor_pos(start_pos.first, start_pos.second);
-				colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
-			}
-			void draw_ui()
-			{
-				draw_markings();
-				draw_picture();
 			}
 
 			void console_clear_line()
@@ -299,7 +479,7 @@ namespace ferruscpp
 					{
 						picture.upload();
 					}
- 					else if (command == "q" || command == "quit")
+					else if (command == "q" || command == "quit")
 					{
 						return true;
 					}
@@ -353,7 +533,6 @@ namespace ferruscpp
 			bool console_start()
 			{
 				char ch;
-				auto cursor_pos = cursor::get_cursor_pos();
 				console_open();
 				ch = io::getch_();
 				while (ch != 27)
@@ -365,8 +544,55 @@ namespace ferruscpp
 				}
 				console_close();
 				draw_ui();
-				cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
 				return false;
+			}
+
+
+			void draw_markings()
+			{
+				cursor::set_cursor_pos(0, 0);
+				colors::set_color_16(colors::c16(14), colors::c16(0));
+				io::putstr_("\\");
+				//write_vertical_numbers
+				colors::set_color_16(colors::c16(13), colors::c16(0));
+				cursor::set_cursor_pos(0, pixel_size.second);
+				std::pair<size_t, size_t> n_cursor_pos = { 1, 1 };
+				size_t counter = 0;
+				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
+				{
+					io::putstr_(std::to_string(counter % 10));
+					++counter;
+					n_cursor_pos.second += pixel_size.second;
+					cursor::set_cursor_pos(0, pixel_size.second * (counter + 1));
+				}
+				//write_horizontal_numbers
+				colors::set_color_16(colors::c16(3), colors::c16(0));
+				cursor::set_cursor_pos(pixel_size.first, 0);
+				n_cursor_pos = { 1, 1 };
+				counter = 0;
+				while (picture.is_in_picture(points::position(get_picture_pos(n_cursor_pos))))
+				{
+					io::putstr_(std::to_string(counter % 10));
+					++counter;
+					n_cursor_pos.first += pixel_size.first;
+					cursor::set_cursor_pos(pixel_size.first * (counter + 1), 0);
+				}
+			}
+			void draw_picture()
+			{
+				picture.draw(points::position(start_pos));
+				cursor::set_cursor_pos(start_pos.first, start_pos.second);
+				colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
+			}
+			void draw_ui()
+			{
+				screen::clear_screen();
+				draw_markings();
+				draw_picture();
+				if (panel.is_open)
+				{
+					panel.draw();
+				}
 			}
 
 			bool move_cursor(const direction& d)
@@ -530,7 +756,7 @@ namespace ferruscpp
 			}
 
 		public:
-			
+
 			wims(Picture_& picture_) : picture(picture_)
 			{
 				pixel_size = picture.get_pixel_size();
@@ -552,12 +778,21 @@ namespace ferruscpp
 					}
 					else
 					{
-						if (ch == 27)
+						if (symbols::is_esc(ch) || symbols::is_tab(ch))
 						{
-							if (console_start())
+							auto cursor_pos = cursor::get_cursor_pos();
+							if (symbols::is_esc(ch))
 							{
-								return;
+								if (console_start())
+								{
+									return;
+								}
 							}
+							else if (symbols::is_tab(ch))
+							{
+								panel.run();
+							}
+							cursor::set_cursor_pos(cursor_pos.first, cursor_pos.second);
 						}
 						else
 						{
@@ -622,143 +857,4 @@ namespace ferruscpp
 			}
 		};
 	}
-}
-
-void symbols_finder()
-{
-	while (true)
-	{
-		char ch = io::getch_();
-		io::putstr_(to_string((int)ch) + ' ');
-	}
-}
-
-int main(int argc, char* argv[])
-{
-	console::init_console_func();
-	screen::open_new_screen();
-	while (!io::is_hit_())
-	{
-
-	}
-	io::clear_in_buffer();
-	screen::update_screen_size();
-	//
-	if (argc == 1)
-	{
-		io::putstr_("Hello, I'm builder of wims");
-	}
-	else
-	{
-		try
-		{
-			std::string name = argv[argc - 1];
-			bool need_create = false;
-			size_t width = 40, height = 40;
-			bool use_Double_Pixel = false;//true if use Double_Pixel
-			size_t pixel_type = 0;// 0 - 16 colors, 1 - 8 bit, 3 - rgb
-			for (int i = 1; i < argc - 1; i++)
-			{
-				std::string arg = argv[i];
-				if (arg == "-w" || arg == "--width")
-				{
-					if (argc - 1 == i + 1)
-					{
-						io::putstr_("Error! Wrong flags using!");
-						std::exit(1);
-					}
-					width = (size_t)std::stoi(argv[++i]);
-					need_create = true;
-				}
-				else if (arg == "-h" || arg == "--height")
-				{
-					if (argc - 1 == i + 1)
-					{
-						io::putstr_("Error! Wrong flags using!");
-						std::exit(1);
-					}
-					height = (size_t)std::stoi(argv[++i]);
-					need_create = true;
-				}
-				else if (arg == "-d" || arg == "--double")
-				{
-					use_Double_Pixel = true;
-				}
-				else if (arg == "-rgb" || arg == "-8bit" || arg == "-16")
-				{
-					if (arg == "-16")
-					{
-						pixel_type = 0;
-					}
-					else if (arg == "-8bit")
-					{
-						pixel_type = 1;
-					}
-					if (arg == "-rgb")
-					{
-						pixel_type = 2;
-					}
-				}
-				else
-				{
-					io::putstr_("Error! Wrong flags using!");
-					return 1;
-				}
-			}
-			//
-			if (use_Double_Pixel)
-			{
-				switch (pixel_type)
-				{
-				case 0:
-					if (need_create)
-					{
-						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name, width, height);
-						wims_src::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
-						program.start();
-					}
-					else
-					{
-						Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>> a(name);
-						wims_src::wims<Picture<pixels::Double_Pixel<pixels::Console_Pixel_16>>> program(a);
-						program.start();
-					}
-					break;
-				default:
-					io::putstr_("Error! Wrong flags using!");
-					return 1;
-				}
-			}
-			else
-			{
-				switch (pixel_type)
-				{
-				case 0:
-					if (need_create)
-					{
-						Picture<pixels::Console_Pixel_16> a(name, width, height);
-						wims_src::wims<Picture<pixels::Console_Pixel_16>> program(a);
-						program.start();
-					}
-					else
-					{
-						Picture<pixels::Console_Pixel_16> a(name);
-						wims_src::wims<Picture<pixels::Console_Pixel_16>> program(a);
-						program.start();
-					}
-					break;
-				default:
-					io::putstr_("Error! Wrong flags using!");
-					return 1;
-				}
-			}
-		}
-		catch (std::exception& ex)
-		{
-			io::putstr_(ex.what());
-		}
-	}
-	//
-	screen::close_screen();
-	console::end_of_work_console_func();
 }

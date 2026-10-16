@@ -44,6 +44,7 @@ namespace ferruscpp
 
 		void clear_screen()
 		{
+			colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
 			io::putstr_("\033[2J");
 		}
 
@@ -145,6 +146,11 @@ namespace ferruscpp
 			}
 			color = color_;
 			return *this;
+		}
+
+		c16::operator int() const noexcept
+		{
+			return static_cast<int>(color);
 		}
 
 		std::istream& operator>>(std::istream& in, c16& color)

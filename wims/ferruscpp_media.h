@@ -80,10 +80,6 @@ namespace ferruscpp
 		{
 			uint32_t x = 0, y = 0;
 			position() = default;
-			position(size_t x_, size_t y_) : x(x_), y(y_)
-			{
-
-			}
 			position(uint32_t x_, uint32_t y_) : x(x_), y(y_)
 			{
 
@@ -251,6 +247,14 @@ namespace ferruscpp
 				return foreground;
 			}
 			colors::c16 get_background() const
+			{
+				return background;
+			}
+			colors::c16& get_foreground_ref()
+			{
+				return foreground;
+			}
+			colors::c16& get_background_ref()
 			{
 				return background;
 			}
@@ -437,7 +441,7 @@ namespace ferruscpp
 	class Picture
 	{
 	private:
-		std::string folder_name = "./";
+		std::string folder_name = ".";
 		std::string name;
 		const std::string end_name = ".wmp";
 		uint32_t size_x = 80;
@@ -591,6 +595,10 @@ namespace ferruscpp
 		const std::pair<size_t, size_t> get_pixel_size() const
 		{
 			return pixel_size;
+		}
+		std::pair<size_t, size_t> get_size() const
+		{
+			return std::pair<size_t, size_t>{size_x, size_y};
 		}
 		T& get_pixel(points::position pic_pos)
 		{
