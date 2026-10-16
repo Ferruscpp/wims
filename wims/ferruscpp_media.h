@@ -12,11 +12,11 @@ namespace ferruscpp
 		{
 			in.read(reinterpret_cast<char*>(&value), sizeof(value));
 		}
+
 		void print_raw(std::ostream& out, const uint32_t& value)
 		{
 			out.write(reinterpret_cast<const char*>(&value), sizeof(value));
 		}
-
 	}
 
 	namespace exceptions
@@ -260,15 +260,14 @@ namespace ferruscpp
 			}
 			friend std::istream& operator>>(std::istream& in, Console_Pixel_16& pixel)
 			{
-				in >> std::noskipws;
-				in >> pixel.symbol;
-				in >> std::skipws;
+				in.read(&pixel.symbol, 1);
 				in >> pixel.foreground >> pixel.background;
 				return in;
 			}
 			friend std::ostream& operator<<(std::ostream& out, const Console_Pixel_16& pixel)
 			{
-				out << pixel.symbol << pixel.foreground << pixel.background;
+				out.write(&pixel.symbol, 1);
+				out << pixel.foreground << pixel.background;
 				return out;
 			}
 		};
@@ -601,7 +600,7 @@ namespace ferruscpp
 		//
 		void download()
 		{
-			std::ifstream in(files::get_file_name(*this));
+			std::ifstream in(files::get_file_name(*this), std::ios::binary);
 			if (!in.is_open())
 			{
 				throw exceptions::File_Not_Found_Exception();
@@ -623,7 +622,7 @@ namespace ferruscpp
 		}
 		void upload() const
 		{
-			std::ofstream out(files::get_file_name(*this));
+			std::ofstream out(files::get_file_name(*this), std::ios::binary);
 			if (!out.is_open())
 			{
 				throw exceptions::File_Not_Found_Exception();

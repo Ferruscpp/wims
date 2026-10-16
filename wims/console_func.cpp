@@ -68,13 +68,17 @@ namespace ferruscpp
 
 		std::istream& operator>>(std::istream& in, crgb& color)
 		{
-			in >> color.red >> color.green >> color.blue;
+			in.read(&color.red, 1);
+			in.read(&color.green, 1);
+			in.read(&color.blue, 1);
 			return in;
 		}
 
 		std::ostream& operator<<(std::ostream& out, const crgb& color)
 		{
-			out << color.red << color.green << color.blue;
+			out.write(&color.red, 1);
+			out.write(&color.green, 1);
+			out.write(&color.blue, 1);
 			return out;
 		}
 
@@ -91,13 +95,13 @@ namespace ferruscpp
 
 		std::istream& operator>>(std::istream& in, c8bit& color)
 		{
-			in >> color.color;
+			in.read(&color.color, 1);
 			return in;
 		}
 
 		std::ostream& operator<<(std::ostream& out, const c8bit& color)
 		{
-			out << color.color;
+			out.write(&color.color, 1);
 			return out;
 		}
 
@@ -145,23 +149,13 @@ namespace ferruscpp
 
 		std::istream& operator>>(std::istream& in, c16& color)
 		{
-			bool need_to_swich = false;
-			if (std::cin.flags() & std::ios_base::skipws)
-			{
-				need_to_swich = true;
-				in >> std::noskipws;
-			}
-			in >> color.color;
-			if (need_to_swich)
-			{
-				in >> std::skipws;
-			}
+			in.read(&color.color, 1);
 			return in;
 		}
 
 		std::ostream& operator<<(std::ostream& out, const c16& color)
 		{
-			out << color.color;
+			out.write(&color.color, 1);
 			return out;
 		}
 
