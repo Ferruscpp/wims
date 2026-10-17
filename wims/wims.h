@@ -300,11 +300,17 @@ namespace ferruscpp
 				int color_type_switch = 1;//0 is foreground and 1 is background
 				settings setting_switch = settings::fb_switch;
 
-				void draw_frame_for_colors()
+				void draw_frame_for_colors(bool is_delete = false)
 				{
+					uint32_t y_pos = parent.screen_size.first - panel_c16.get_size().first + 2;
+					colors::c16 color{colors::get_background_basic_color()};
 					if ((color_type_switch == 0 && !parent.need_set_foreground) || (color_type_switch == 1 && !parent.need_set_background))
 					{
-						figures::draw_frame(points::position{ static_cast<uint32_t>(parent.screen_size.first - 42), objects_y_pos::dont_set_line }, 21, 3, colors::c16{ 14 }, true);
+						if (!is_delete)
+						{
+							color = 14;
+						}
+						figures::draw_frame(points::position{ y_pos, objects_y_pos::dont_set_line }, 21, 3, color, true);
 					}
 					else
 					{
@@ -317,7 +323,19 @@ namespace ferruscpp
 						{
 							paint_number = (int)parent.paint.get_background();
 						}
-						figures::draw_frame(points::position{ static_cast<uint32_t>(parent.screen_size.first - 42 + (paint_number % 4) * 10), objects_y_pos::first_color_line + (paint_number / 4) * 5 }, 6, 6, colors::c16(15 - paint_number), true);
+						//
+						if (!is_delete)
+						{
+							if (paint_number == (int)colors::get_background_basic_color())
+							{
+								color = 15 - (int)colors::get_background_basic_color();
+							}
+							else
+							{
+								color = paint_number;
+							}
+						}
+						figures::draw_frame(points::position{ y_pos + (paint_number % 4) * 10, objects_y_pos::first_color_line + (paint_number / 4) * 5 }, 6, 6, color, true);
 					}
 				}
 				
