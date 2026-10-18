@@ -344,11 +344,11 @@ namespace ferruscpp
 					panel_y_size = panel.get_size().second;
 					processes.push_back([this](char c)
 					{
-						return this->processing_switch_setting_mode(c);
+						return this->Base_Panel::processing_switch_setting_mode(c);
 					});
 					processes.push_back([this](char c)
 					{
-						return this->processing_switch(c);
+						return this->Base_Panel::processing_switch(c);
 					});
 				}
 
@@ -381,7 +381,9 @@ namespace ferruscpp
 						for (auto& proc : processes)
 						{
 							if (proc(ch))
+							{
 								break;
+							}
 						}
 						ch = io::getch_();
 					}
@@ -397,9 +399,215 @@ namespace ferruscpp
 					parent.draw_ui();
 				}
 			};
+			template<typename Pixel_Type>
+			class Panel : public Base_Panel
+			{
+
+			};
+
+			template<>
+			class Panel<pixels::Console_Pixel_16> : public Base_Panel
+			{
+			private:
+				enum panel_c16_objects : size_t
+				{
+					fb_switch = base_panel_objects::counter,
+					color_switch,
+					dont_set_switch,
+					counter
+				};
+				//panel_c16
+				Picture<pixels::Console_Pixel_16> panel_c16{ "panel_for_Console_Pixel_16" };
+				size_t panel_c16_x_size, panel_c16_y_size;
+				//mode of wotk
+				size_t color_type_switch = 1;
+
+				void draw_setting_switch() const override
+				{
+					Base_Panel::draw_setting_switch();
+					size_t y;
+					if (setting_mode == panel_c16_objects::fb_switch)
+					{
+						y = y_pos[fb_switch];
+					}
+					else if (setting_mode == panel_c16_objects::color_switch)
+					{
+						y = y_pos[color_switch];
+					}
+					else
+					{
+						return;
+					}
+					cursor::set_cursor_pos(parent.screen_size.first - panel_c16_x_size + 1, y);
+					io::putstr_(" ");
+				}
+				void draw_colors_type_switch() const
+				{
+					using namespace colors;
+					set_color_16(get_foreground_basic_color(), get_background_basic_color());
+					size_t x = parent.screen_size.first;
+					if (color_type_switch == 0)
+					{
+						x -= 22;
+					}
+					else
+					{
+						x -= 42;
+					}
+					cursor::set_cursor_pos(x, y_pos[panel_c16_objects::fb_switch]);
+					for (size_t x = 0; x < 22; ++x)
+					{
+						io::putstr_(" ");
+					}
+				}
+				void draw_frame_for_colors(bool is_delete = false) const
+				{
+					size_t x = parent.screen_size.first - panel_c16_x_size + 2;
+					colors::c16 color{ colors::get_background_basic_color() };
+					if ((color_type_switch == 0 && !parent.need_set_foreground) || (color_type_switch == 1 && !parent.need_set_background))
+					{
+						if (!is_delete)
+						{
+							color = 14;
+						}
+						figures::draw_frame(points::position{ x, y_pos[dont_set_switch]}, 21, 3, color, true);
+					}
+					else
+					{
+						int paint_number;
+						if (color_type_switch == 0)
+						{
+							paint_number = (int)parent.paint.get_foreground();
+						}
+						else
+						{
+							paint_number = (int)parent.paint.get_background();
+						}
+						//
+						if (!is_delete)
+						{
+							if (paint_number == (int)colors::get_background_basic_color())
+							{
+								color = 15 - (int)colors::get_background_basic_color();
+							}
+							else
+							{
+								color = paint_number;
+							}
+						}
+						figures::draw_frame(points::position{ x + (paint_number % 4) * 10, y_pos[color_switch] + (paint_number / 4) * 5 }, 6, 6, color, true);
+					}
+				}
+
+				bool processing_switch_setting_mode(char ch) override
+				{
+					if (symbols::is_backspace(ch))
+					{
+						Base_Panel::processing_switch_setting_mode(ch);
+						if (setting_mode == 0)
+						{
+							setting_mode = panel_c16_objects::fb_switch;
+						}
+						else
+						{
+							if (setting_mode == panel_c16_objects::fb_switch)
+							{
+								setting_mode = panel_c16_objects::color_switch;
+							}
+							else
+							{
+								setting_mode = 0;
+							}
+						}
+						draw();
+						return true;
+					}
+					return false;
+				}
+				bool processing_switch(char ch) override
+				{
+					if (symbols::is_enter(ch))
+					{
+						if (setting_mode == panel_c16_objects::fb_switch)
+						{
+							color_type_switch = 1 - color_type_switch;
+							draw();
+						}
+						else if (setting_mode == panel_c16_objects::color_switch)
+						{
+							bool* need_set = nullptr;
+							colors::c16* color = nullptr;
+							if (color_switch == 0)
+							{
+								need_set = &parent.need_set_foreground;
+								color = &parent.paint.get_foreground_ref();
+							}
+							else
+							{
+								need_set = &parent.need_set_background;
+								color = &parent.paint.get_background_ref();
+							}
+							//
+							draw_frame_for_colors(true);
+							if (*need_set == false)
+							{
+								*need_set = true;
+								*color = colors::c16(0);
+							}
+							else if ((int)*color != 15)
+							{
+								*color = colors::c16((int)*color + 1);
+							}
+							else
+							{
+								*need_set = false;
+							}
+							draw_frame_for_colors();
+						}
+						else
+						{
+							return false;
+						}
+						return true;
+					}
+					return false;
+				}
+
+			public:
+				Panel(wims<Picture_>& parent_) : Base_Panel(parent_)
+				{
+					y_pos.push_back(panel_y_size);//fb_switch
+					y_pos.push_back(y_pos[fb_switch] + 2);//color_switch
+					y_pos.push_back(y_pos[color_switch] + 20);//dont_set_switch
+					panel_c16_x_size = panel_c16.get_size().first;
+					panel_c16_y_size = panel_c16.get_size().second;
+					processes.push_front([this](char c)
+					{
+						return this->Panel::processing_switch_setting_mode(c);
+					});
+					processes.push_front([this](char c)
+					{
+						return this->Panel::processing_switch(c);
+					});
+				}
+
+				void draw() const override
+				{
+					using namespace colors;
+					Base_Panel::draw();
+					panel_c16.draw(points::position { parent.screen_size.first - panel_c16_x_size, panel_y_size });
+					//draw setting switch
+					draw_setting_switch();
+					//draw color_type_switch
+					draw_colors_type_switch();
+					//draw frame for color
+					draw_frame_for_colors();
+				}
+			};
 
 			Picture_& picture;
-			Base_Panel panel{ *this };
+			//Base_Panel panel{ *this };
+			Panel<pixels::Console_Pixel_16> panel{ *this };
 			std::pair<size_t, size_t> pixel_size;
 			std::pair<size_t, size_t> screen_size;
 			wims_mode mode = wims_mode::move;
