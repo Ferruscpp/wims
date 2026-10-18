@@ -80,18 +80,9 @@ namespace ferruscpp
 		{
 			uint32_t x = 0, y = 0;
 			position() = default;
-			position(uint32_t x_, uint32_t y_) : x(x_), y(y_)
+			position(size_t x_, size_t y_) : x(static_cast<uint32_t>(x_)), y(static_cast<uint32_t>(y_))
 			{
 
-			}
-			position(int x_, int y_)
-			{
-				if (x_ < 0 || y_ < 0)
-				{
-					std::clog << "Warning: x or y is negative number!" << std::endl;
-				}
-				x = x_;
-				y = y_;
 			}
 			//
 			friend std::istream& operator>>(std::istream& in, position& pos)
@@ -544,7 +535,7 @@ namespace ferruscpp
 		}
 		void draw(points::position cur_pos) const
 		{
-			seg_draw(points::position(0, 0), points::window4(cur_pos, points::position(cur_pos.x + size_x * pixel_size.x - 1, cur_pos.y + size_y * pixel_size.y - 1)));
+			seg_draw(points::position(0, 0), points::window4{ cur_pos, points::position{ cur_pos.x + size_x * pixel_size.x - 1, cur_pos.y + size_y * pixel_size.y - 1 } });
 		}
 		void draw() const
 		{

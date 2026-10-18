@@ -133,7 +133,9 @@ int main(int argc, char* argv[])
 		}
 		catch (std::exception& ex)
 		{
+			colors::set_color_16(colors::get_foreground_basic_color(), colors::get_background_basic_color());
 			io::putstr_(ex.what());
+			console::wait(10000);
 		}
 	}
 	//
