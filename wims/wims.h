@@ -270,7 +270,6 @@ namespace ferruscpp
 				//mode of wotk
 				bool is_open = false, is_focusing_on_panel = false;
 				size_t setting_mode = base_panel_objects::brushes_switch;
-				size_t brushes_type_switch = 0;
 
 				virtual void draw_setting_switch() const
 				{
@@ -290,7 +289,7 @@ namespace ferruscpp
 					{
 						color =	13;
 					}
-					figures::draw_frame(points::position{ x + (brushes_type_switch % 4) * 10, y_pos[base_panel_objects::brushes_switch] + (brushes_type_switch / 4) * 5 }, 6, 6, color, true);
+					figures::draw_frame(points::position{ x + (parent.brushes_type_switch % 4) * 10, y_pos[base_panel_objects::brushes_switch] + (parent.brushes_type_switch / 4) * 5 }, 6, 6, color, true);
 				}
 
 				virtual bool processing_switch_setting_mode(char ch)
@@ -319,10 +318,10 @@ namespace ferruscpp
 						if (setting_mode == base_panel_objects::brushes_switch)
 						{
 							draw_frame_for_brushes(true);
-							++brushes_type_switch;
-							if (brushes_type_switch == 3)
+							++parent.brushes_type_switch;
+							if (parent.brushes_type_switch == 3)
 							{
-								brushes_type_switch = 0;
+								parent.brushes_type_switch = 0;
 							}
 							draw_frame_for_brushes();
 						}
@@ -606,7 +605,6 @@ namespace ferruscpp
 			};
 
 			Picture_& picture;
-			//Base_Panel panel{ *this };
 			Panel<pixels::Console_Pixel_16> panel{ *this };
 			std::pair<size_t, size_t> pixel_size;
 			std::pair<size_t, size_t> screen_size;
@@ -614,6 +612,8 @@ namespace ferruscpp
 			std::pair<size_t, size_t> start_pos = { 1, 1 };
 			bool need_set_foreground = false, need_set_background = false;
 			pixel_type paint;
+			size_t brushes_type_switch = 0;
+
 			std::pair<size_t, size_t> get_picture_pos(std::pair<size_t, size_t> cursor_pos)
 			{
 				return { (cursor_pos.first - start_pos.first) / pixel_size.first, (cursor_pos.second - start_pos.second) / pixel_size.second };
@@ -700,6 +700,10 @@ namespace ferruscpp
 						colors::set_color_16(colors::c16(15), colors::c16(0));
 						io::getch_();
 					}
+					else if (command == "set_brush" || command == "set brush")
+					{
+						set_brush();
+					}
 					//
 					console_clear_line();
 				}
@@ -727,7 +731,6 @@ namespace ferruscpp
 				draw_ui();
 				return false;
 			}
-
 
 			void draw_markings()
 			{
@@ -897,6 +900,31 @@ namespace ferruscpp
 					}
 					pixel.draw();
 					move_cursor(direction::left);
+				}
+			}
+			void set_brush()
+			{
+				console_clear_line();
+				io::putstr_("brushes(pen/fill/eraser): ");
+				std::string brush_name;
+				io::read_and_write(brush_name);
+				if (brush_name == "pen" || brush_name == "0")
+				{
+					brushes_type_switch = 0;
+				}
+				else if (brush_name == "fill" || brush_name == "1")
+				{
+					brushes_type_switch = 1;
+				}
+				else if (brush_name == "eraser" || brush_name == "2")
+				{
+					brushes_type_switch = 2;
+				}
+				else
+				{
+					console_clear_line();
+					io::putstr_("Invalid argument");
+					console::wait(500);
 				}
 			}
 
