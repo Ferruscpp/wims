@@ -276,7 +276,6 @@ namespace ferruscpp
 				{
 					using namespace colors;
 					set_color_16(get_foreground_basic_color(), c16{ 14 });
-					panel.draw(points::position(parent.screen_size.first - panel_x_size, 0U));
 					if (setting_mode == base_panel_objects::brushes_switch)
 					{
 						cursor::set_cursor_pos(parent.screen_size.first - panel_x_size + 1, y_pos[brushes_switch]);
@@ -289,7 +288,7 @@ namespace ferruscpp
 					colors::c16 color{ colors::get_background_basic_color() };
 					if (!is_delete)
 					{
-						color = 15;
+						color =	13;
 					}
 					figures::draw_frame(points::position{ x + (brushes_type_switch % 4) * 10, y_pos[base_panel_objects::brushes_switch] + (brushes_type_switch / 4) * 5 }, 6, 6, color, true);
 				}
@@ -307,7 +306,7 @@ namespace ferruscpp
 						{
 							return false;
 						}
-						draw();
+						draw_setting_switch();
 						return true;
 						*/
 					}
@@ -364,7 +363,7 @@ namespace ferruscpp
 
 				virtual void draw() const
 				{
-					panel.draw(points::position{ parent.screen_size.first - panel_x_size, 0 });
+					panel.draw(points::position{ parent.screen_size.first - panel_x_size, 0U });
 					//draw setting switch
 					draw_setting_switch();
 					//draw frame for brushes
@@ -384,7 +383,6 @@ namespace ferruscpp
 							if (proc(ch))
 								break;
 						}
-						draw();
 						ch = io::getch_();
 					}
 					if (symbols::is_tab(ch))
