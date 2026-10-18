@@ -2,6 +2,7 @@
 #include "console_func.h"
 #include <vector>
 #include <deque>
+#include <utility>
 #include <functional>
 #include "ferruscpp_media.h"
 #include <type_traits>
@@ -873,35 +874,7 @@ namespace ferruscpp
 					}
 				}
 			}
-			void paint_pixel()
-			{
-				auto cursor_pos = cursor::get_cursor_pos();
-				points::position picture_pos(get_picture_pos(cursor_pos));
-				if (picture.is_in_picture(picture_pos))
-				{
-					pixel_type& pixel = picture.get_pixel(picture_pos);
-					if (need_set_foreground)
-					{
-						if (need_set_background)
-						{
-							pixel.set(paint.get_foreground(), paint.get_background());
-						}
-						else
-						{
-							pixel.set(paint.get_foreground(), pixel.get_background());
-						}
-					}
-					else
-					{
-						if (need_set_background)
-						{
-							pixel.set(pixel.get_foreground(), paint.get_background());
-						}
-					}
-					pixel.draw();
-					move_cursor(direction::left);
-				}
-			}
+
 			void set_brush()
 			{
 				console_clear_line();
@@ -925,6 +898,68 @@ namespace ferruscpp
 					console_clear_line();
 					io::putstr_("Invalid argument");
 					console::wait(500);
+				}
+			}
+			void paint_pixel(points::position picture_pos)
+			{
+				pixel_type& pixel = picture.get_pixel(picture_pos);
+				if (need_set_foreground)
+				{
+					if (need_set_background)
+					{
+						pixel.set(paint.get_foreground(), paint.get_background());
+					}
+					else
+					{
+						pixel.set(paint.get_foreground(), pixel.get_background());
+					}
+				}
+				else
+				{
+					if (need_set_background)
+					{
+						pixel.set(pixel.get_foreground(), paint.get_background());
+					}
+				}
+				pixel.draw();
+			}
+			void exe_fill()
+			{
+			
+			}
+			void exe_painting()
+			{
+				auto cursor_pos = cursor::get_cursor_pos();
+				points::position picture_pos(get_picture_pos(cursor_pos));
+				if (picture.is_in_picture(picture_pos))
+				{
+					if (brushes_type_switch == 1)
+					{
+						exe_fill();
+					}
+					else 
+					{
+						pixel_type* real_paint = nullptr;
+						bool real_need_set_foreground, real_need_set_background;
+						if (brushes_type_switch == 2)
+						{
+							real_need_set_foreground = need_set_foreground;
+							need_set_foreground = true;
+							real_need_set_background = need_set_background;
+							need_set_background = true;
+							real_paint = new pixel_type{' ', colors::get_foreground_basic_color(), colors::get_background_basic_color()};
+							std::swap(*real_paint, paint);
+						}
+						paint_pixel(picture_pos);
+						move_cursor(direction::left);
+						if (brushes_type_switch == 2)
+						{
+							need_set_foreground = real_need_set_foreground;
+							need_set_background = real_need_set_background;
+							std::swap(*real_paint, paint);
+							delete real_paint;
+						}
+					}
 				}
 			}
 
@@ -1055,7 +1090,7 @@ namespace ferruscpp
 							{
 								if (symbols::is_moving_leter(ch) || symbols::is_moving_number(ch))
 								{
-									paint_pixel();
+									exe_painting();
 									exe_moving_numbers(ch);
 									exe_moving_leters(ch);
 								}
