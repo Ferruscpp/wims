@@ -15,11 +15,13 @@ int main(int argc, char* argv[])
 {
 	console::init_console_func();
 	screen::open_new_screen();
+	io::putstr_("Hit to start...");
 	while (!io::is_hit_())
 	{
 
 	}
 	io::clear_in_buffer();
+	screen::clear_screen();
 	screen::update_screen_size();
 	//
 	if (argc == 1)
