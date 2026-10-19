@@ -2,6 +2,7 @@
 #include "console_func.h"
 #include <vector>
 #include <deque>
+#include <queue>
 #include <utility>
 #include <functional>
 #include "ferruscpp_media.h"
@@ -619,6 +620,10 @@ namespace ferruscpp
 			{
 				return { (cursor_pos.first - start_pos.first) / pixel_size.first, (cursor_pos.second - start_pos.second) / pixel_size.second };
 			}
+			points::position get_cursor_pos(points::position pic_pos)
+			{
+				return points::position{ pic_pos.x * pixel_size.first + start_pos.first, pic_pos.y * pixel_size.second + start_pos.second };
+			}
 
 			void console_clear_line()
 			{
@@ -923,9 +928,69 @@ namespace ferruscpp
 				}
 				pixel.draw();
 			}
-			void exe_fill()
+			class Fill_Mode
 			{
-			
+			private:
+				wims<Picture_>& parent;
+				std::vector<std::vector<bool>> used;
+				pixel_type original_color;
+				size_t size_x, size_y;
+				std::queue<points::position> q;
+
+				void add(points::position& pos)
+				{
+					if (pos.x < size_x && pos.y < size_y)
+					{
+						if (!used[pos.x][pos.y] && parent.picture.get_pixel(pos).get_background() == original_color.get_background())
+						{
+							used[pos.x][pos.y] = true;
+							q.push(pos);
+						}
+					}
+				}
+			public:
+				Fill_Mode(wims<Picture_>& parent_, points::position picture_pos) : parent(parent_), original_color{parent.picture.get_pixel(picture_pos)}
+				{
+					size_x = parent.picture.get_size().first;
+					size_y = parent.picture.get_size().second;
+					used.resize(size_x, std::vector<bool>(size_y, false));
+					//
+					used[picture_pos.x][picture_pos.y] = true;
+					q.push(picture_pos);
+					while (!q.empty())
+					{
+						points::position pos = q.front();
+						q.pop();
+						if (used[pos.x][pos.y])
+						{
+							auto cur_pos = parent.get_cursor_pos(pos);
+							cursor::set_cursor_pos(cur_pos.x, cur_pos.y);
+							parent.paint_pixel(pos);
+							//
+							points::position new_pos{ pos };
+							++new_pos.x;
+							add(new_pos);
+							//
+							new_pos = pos;
+							--new_pos.x;
+							add(new_pos);
+							//
+							new_pos = pos;
+							--new_pos.y;
+							add(new_pos);
+							//
+							new_pos = pos;
+							++new_pos.y;
+							add(new_pos);
+						}
+					}
+				}
+			};
+			void exe_fill(points::position picture_pos)
+			{
+				auto cur_pos = cursor::get_cursor_pos();
+				Fill_Mode(*this, picture_pos);
+				cursor::set_cursor_pos(cur_pos.first, cur_pos.second);
 			}
 			void exe_painting()
 			{
@@ -935,7 +1000,7 @@ namespace ferruscpp
 				{
 					if (brushes_type_switch == 1)
 					{
-						exe_fill();
+						exe_fill(picture_pos);
 					}
 					else 
 					{

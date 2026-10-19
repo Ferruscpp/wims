@@ -69,6 +69,7 @@ namespace ferruscpp
 			c16(char color_);
 			c16& operator=(int color_);
 			c16& operator=(char color_);
+			bool operator==(const c16& color_) const;
 			explicit operator int() const noexcept;
 			friend std::istream& operator>>(std::istream& in, c16& color);
 			friend std::ostream& operator<<(std::ostream& out, const c16& color);

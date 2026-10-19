@@ -148,6 +148,11 @@ namespace ferruscpp
 			return *this;
 		}
 
+		bool c16::operator==(const c16& color_) const
+		{
+			return color == color_.color;
+		}
+
 		c16::operator int() const noexcept
 		{
 			return static_cast<int>(color);
