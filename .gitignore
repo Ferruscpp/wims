@@ -8,7 +8,7 @@
 !*.wmp
 !*.wmr
 !*.wma
-!*.bmp
+!*.gif
 !makefile
 !README.md
 !.gitignore
